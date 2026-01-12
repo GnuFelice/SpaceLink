@@ -1,16 +1,56 @@
-# React + Vite
+# SpaceLink 🚀
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**SpaceLink** is a modern, cross-platform desktop dashboard for monitoring **Starlink** satellite internet connections. Built with **Electron**, **React**, and **Vite**, it provides real-time telemetry, obstruction mapping, and speed testing in a sleek, "Deep Space" themed interface.
 
-Currently, two official plugins are available:
+![SpaceLink Dashboard Screenshot](https://via.placeholder.com/800x450.png?text=SpaceLink+Dashboard+Preview)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Features
 
-## React Compiler
+- **Real-time Status**: Monitor uptime, ping, signal-to-noise ratio (SNR), and throughput (Download/Upload).
+- **Sky Map Visualization**: Interactive map showing satellite positions and obstruction wedges relative to your dish.
+- **Speedtest Integration**: Built-in LibreSpeed client for accurate connection testing without leaving the app.
+- **Local History**: Tracks latency and speed stats over time.
+- **System Controls**: Reboot, Stow, and Unstow your Starlink dish directly from the UI.
+- **Cross-Platform**: Designed for Windows (tested), macOS, and Linux.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Tech Stack
 
-## Expanding the ESLint configuration
+- **Frontend**: React (v19), Recharts (History), Vanilla CSS (Design System).
+- **Backend (Electron)**: gRPC (Starlink API), SQLite (Local DB), Axios (TLE Data).
+- **Build Tool**: Vite, Electron Builder.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🚀 Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/GnuFelice/SpaceLink.git
+   cd SpaceLink
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Run in Development Mode**:
+   ```bash
+   npm run dev
+   ```
+   *Note: Requires a Starlink dish reachable on local network (default IP: 192.168.100.1) or will fallback to Mock Data.*
+
+4. **Build for Production**:
+   ```bash
+   npm run build
+   ```
+   The installer will be generated in the `release/` directory.
+
+## 📡 Starlink API
+
+SpaceLink communicates directly with the Starlink hardware using gRPC. It auto-detects your location from the dish to rendering the satellite map accurately.
+
+## 📄 License
+
+MIT License. See [LICENSE](LICENSE) for details.
+
+---
+*Created by [GnuFelice](https://github.com/GnuFelice)*

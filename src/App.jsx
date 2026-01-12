@@ -1,13 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import StatusCard from './components/StatusCard';
 import HistoryChart from './components/HistoryChart';
 import SkyMap from './components/SkyMap';
 import SpeedtestWidget from './components/SpeedtestWidget';
 import SettingsModal from './components/SettingsModal';
-
 import DiagnosticsWidget from './components/DiagnosticsWidget';
-
 import SplashScreen from './components/SplashScreen';
 
 function App() {

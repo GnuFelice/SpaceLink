@@ -1,24 +1,21 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const isDev = process.env.NODE_ENV === 'development';
 
+// Services
 const StarlinkService = require('./services/starlinkClient.cjs');
+const SpeedtestService = require('./services/speedtest.cjs');
+const tleService = require('./services/tleService.cjs');
+const TelemetryDB = require('./db/database.cjs');
 
 // Initialize Database
-const TelemetryDB = require('./db/database.cjs');
 const db = new TelemetryDB();
 
-const SpeedtestService = require('./services/speedtest.cjs');
-const speedtestService = new SpeedtestService();
-
-// Initialize Service (Use Mock for dev if not on Starlink network, controlled by ENV or default)
+// Initialize Services
+// Use Mock if not on Starlink network (controlled by ENV or default)
 const starlinkService = new StarlinkService(false);
-
-// RouterService removed
-
-const tleService = require('./services/tleService.cjs');
-
-const fs = require('fs');
+const speedtestService = new SpeedtestService();
 
 // --- Settings Persistence ---
 const SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');

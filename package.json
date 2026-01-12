@@ -1,7 +1,9 @@
 {
   "name": "spacelink",
-  "private": true,
   "version": "1.0.3",
+  "description": "Starlink Dish Monitoring Dashboard & Tools",
+  "author": "GnuFelice",
+  "license": "MIT",
   "type": "module",
   "main": "electron/main.cjs",
   "repository": {
