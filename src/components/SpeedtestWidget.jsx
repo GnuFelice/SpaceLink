@@ -56,7 +56,10 @@ function SpeedtestWidget() {
             // marginTop: '20px' // Removed for grid layout
             height: '100%',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            minWidth: '300px', // Prevent shrinking too much
+            maxWidth: '100%',  // Allow fill but respect parent
+            overflow: 'hidden' // Prevent internal expansion from pushing bounds
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h3 style={{
@@ -87,29 +90,29 @@ function SpeedtestWidget() {
                 )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', textAlign: 'center', flex: 1, alignContent: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, justifyContent: 'center' }}>
                 {/* Download */}
-                <div style={{ padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '5px' }}>DOWNLOAD</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent-cyan)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>DOWNLOAD</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent-cyan)' }}>
                         {progress?.type === 'download' ? progress.speed.toFixed(1) : (result?.download ? result.download.toFixed(1) : '---')}
                         <span style={{ fontSize: '0.8rem', fontWeight: 'normal', color: 'var(--text-secondary)', marginLeft: '4px' }}>Mbps</span>
                     </div>
                 </div>
 
                 {/* Upload */}
-                <div style={{ padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '5px' }}>UPLOAD</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ff00ff' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>UPLOAD</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ff00ff' }}>
                         {progress?.type === 'upload' ? progress.speed.toFixed(1) : (result?.upload ? result.upload.toFixed(1) : '---')}
                         <span style={{ fontSize: '0.8rem', fontWeight: 'normal', color: 'var(--text-secondary)', marginLeft: '4px' }}>Mbps</span>
                     </div>
                 </div>
 
                 {/* Ping */}
-                <div style={{ padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '5px' }}>PING</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffb700' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>PING</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ffb700' }}>
                         {result?.ping ? result.ping.toFixed(0) : '---'}
                         <span style={{ fontSize: '0.8rem', fontWeight: 'normal', color: 'var(--text-secondary)', marginLeft: '4px' }}>ms</span>
                     </div>
