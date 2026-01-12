@@ -13,6 +13,9 @@
   "scripts": {
     "dev": "concurrently \"vite\" \"wait-on tcp:5173 && cross-env NODE_ENV=development electron .\"",
     "build": "vite build && electron-builder --publish always",
+    "build:mac": "vite build && electron-builder --mac",
+    "build:linux": "vite build && electron-builder --linux",
+    "build:all": "vite build && electron-builder -mwl",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -56,6 +59,18 @@
       "target": "nsis",
       "icon": "public/icon.png",
       "publish": "github"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "public/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "public/icon.png",
+      "category": "Utility"
     },
     "compression": "maximum"
   }

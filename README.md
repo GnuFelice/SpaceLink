@@ -39,10 +39,26 @@
    *Note: Requires a Starlink dish reachable on local network (default IP: 192.168.100.1) or will fallback to Mock Data.*
 
 4. **Build for Production**:
-   ```bash
-   npm run build
-   ```
-   The installer will be generated in the `release/` directory.
+   
+   - **Windows** (Default):
+     ```bash
+     npm run build
+     ```
+   - **macOS** (DMG):
+     ```bash
+     npm run build:mac
+     ```
+   - **Linux** (AppImage, Deb):
+     ```bash
+     npm run build:linux
+     ```
+   - **All Platforms**:
+     ```bash
+     npm run build:all
+     ```
+   The installers will be generated in the `release/` directory.
+
+   > **Note for macOS:** Building on Windows produces an unsigned `.dmg`. Users will need to right-click -> Open to bypass security warnings. For a fully signed app, build on a Mac with a developer certificate.
 
 ## 📡 Starlink API
 
