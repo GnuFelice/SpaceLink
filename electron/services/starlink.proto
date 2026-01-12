@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package SpaceX.API.Device;
+
+service Device {
+    rpc Handle (Request) returns (Response);
+}
+
+message Request {
+    oneof request {
+        GetStatusRequest get_status = 1004;
+        GetHistoryRequest get_history = 1006;
+        RebootRequest reboot = 1001;
+        DishStowRequest dish_stow = 2002;
+        GetLocationRequest get_location = 1017;
+        WifiGetStatusRequest wifi_get_status = 3005;
+    }
+}
+
+message Response {
+    oneof response {
+        DishGetStatusResponse dish_get_status = 2004;
+        DishGetHistoryResponse dish_get_history = 2006;
+        RebootResponse reboot = 1001;
+        DishStowResponse dish_stow = 2002;
+        GetLocationResponse get_location = 1017;
+        WifiGetStatusResponse wifi_get_status = 3005;
+    }
+}
+
+message WifiGetStatusRequest {}
+
+message WifiGetStatusResponse {
+    DeviceInfo device_info = 1;
+    DeviceState device_state = 2;
+    WifiConfig config = 2000;
+}
+
+message WifiConfig {
+    string country_code = 1;
+    string network_name = 3;
+    string network_password = 4;
+}
+
+message GetStatusRequest {}
+message GetHistoryRequest {}
+message RebootRequest {}
+message DishStowRequest {
+    bool unstow = 1;
+}
+message GetLocationRequest {}
+
+message GetLocationResponse {
+    LLAPosition lla = 1;
+}
+
+message LLAPosition {
+    double lat = 1;
+    double lon = 2;
+    double alt = 3;
+}
+
+message RebootResponse {}
+message DishStowResponse {}
+
+message DishGetStatusResponse {
+    DeviceInfo device_info = 1;
+    DeviceState device_state = 2; // Fixed field 2
+    // DishAlerts alerts = 105;
+    // float snr = 106;
+    
+    float downlink_throughput_bps = 1007;
+    float uplink_throughput_bps = 1008;
+    float power_in = 1009;
+    float snr = 1011;
+    float pop_ping_latency_ms = 1012;
+    DishObstructionStats obstruction_stats = 1006;
+}
+
+message DishObstructionStats {
+    float fraction_obstructed = 1;
+    float valid_s = 4;
+    repeated float wedge_fraction_obstructed = 5;
+}
+
+message DishGetHistoryResponse {
+    uint64 current = 1;
+    repeated float pop_ping_latency_ms = 1001;
+    repeated float downlink_throughput_bps = 1002;
+    repeated float uplink_throughput_bps = 1003;
+    repeated float power_in = 1004;
+}
+
+message DeviceInfo {
+    string id = 1;
+    string hardware_version = 2;
+    string software_version = 3;
+    string country_code = 4;
+}
+
+message DeviceState {
+    uint64 uptime_s = 1;
+}
+
+message DishAlerts {
+    bool motors_stuck = 1;
+    bool thermal_shutdown = 2;
+    bool thermal_throttle = 3;
+    bool unexpected_location = 4;
+    bool mast_not_near_vertical = 5;
+    bool slow_ethernet_speeds = 6;
+}
