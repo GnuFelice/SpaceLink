@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpaceLink Splash Concepts</title>
+<style>
+    body {
+        margin: 0;
+        background: #050505;
+        color: #fff;
+        font-family: 'Inter', sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+    }
+    h1 { margin: 20px; color: #888; font-weight: 300; }
+    .container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+        padding: 20px;
+    }
+    .concept-card {
+        width: 300px;
+        height: 500px;
+        border: 1px solid #333;
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+        background: #0a0e17;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .concept-label {
+        position: absolute;
+        bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    /* --- 1. ORBITAL --- */
+    .orbital-core {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #4facfe, #00f2fe);
+        box-shadow: 0 0 40px rgba(0, 242, 254, 0.4);
+        animation: pulse 3s infinite ease-in-out;
+        position: relative;
+        z-index: 2;
+    }
+    .orbit-ring {
+        position: absolute;
+        width: 160px;
+        height: 160px;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 50%;
+        animation: rotate 4s linear infinite;
+        z-index: 1;
+    }
+    .orbit-ring::before {
+        content: '';
+        position: absolute;
+        top: -4px;
+        left: 50%;
+        width: 8px;
+        height: 8px;
+        background: #fff;
+        border-radius: 50%;
+        box-shadow: 0 0 10px #fff;
+    }
+    .orbit-ring-2 {
+        position: absolute;
+        width: 220px;
+        height: 220px;
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 50%;
+        animation: rotate 7s linear infinite reverse;
+    }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } }
+    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* --- 2. HUD --- */
+    .hud-grid {
+        position: absolute;
+        inset: 0;
+        background-image: linear-gradient(rgba(0, 255, 136, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 136, 0.05) 1px, transparent 1px);
+        background-size: 20px 20px;
+    }
+    .hud-content { z-index: 2; width: 80%; font-family: 'Courier New', monospace; color: #00ff88; }
+    .loading-bar-container { height: 4px; background: rgba(0, 255, 136, 0.2); margin: 10px 0; border-radius: 2px; overflow: hidden; }
+    .loading-bar { height: 100%; background: #00ff88; width: 0%; animation: load 2s infinite ease-in-out; box-shadow: 0 0 10px #00ff88; }
+    .terminal-text { overflow: hidden; white-space: nowrap; border-right: 2px solid; animation: typing 3s steps(30, end) infinite; font-size: 0.7rem; margin-bottom: 5px; opacity: 0.8; }
+    @keyframes load { 0% { width: 0%; } 50% { width: 70%; } 100% { width: 100%; opacity: 0; } }
+    @keyframes typing { from { width: 0 } to { width: 100% } }
+
+    /* --- 3. CONSTELLATION --- */
+    .constellation-wrapper { position: relative; width: 100%; height: 100%; }
+    .node { position: absolute; width: 4px; height: 4px; background: #fff; border-radius: 50%; animation: twinkle 2s infinite alternate; }
+    .line { position: absolute; background: rgba(255,255,255,0.1); transform-origin: left center; }
+    @keyframes twinkle { from { opacity: 0.2; } to { opacity: 1; } }
+
+</style>
+</head>
+<body>
+
+    <h1>PROTOTIPI ANIMAZIONE SPACELINK</h1>
+
+    <div class="container">
+        
+        <!-- 1. ORBITAL -->
+        <div class="concept-card">
+            <div class="orbital-core"></div>
+            <div class="orbit-ring"></div>
+            <div class="orbit-ring-2"></div>
+            <div class="concept-label">1. Orbital</div>
+        </div>
+
+        <!-- 2. HUD -->
+        <div class="concept-card">
+            <div class="hud-grid"></div>
+            <div class="hud-content">
+                <div class="terminal-text">INITIALIZING SPACELINK...</div>
+                <div class="loading-bar-container"><div class="loading-bar" style="animation-duration: 1.5s"></div></div>
+                <div class="terminal-text" style="animation-delay: 0.5s">CONNECTING SATELLITES...</div>
+                <div class="loading-bar-container"><div class="loading-bar" style="animation-duration: 2.2s"></div></div>
+                <div class="terminal-text" style="animation-delay: 1s">CALIBRATING DISH...</div>
+                <div class="loading-bar-container"><div class="loading-bar" style="animation-duration: 1.8s"></div></div>
+            </div>
+            <div class="concept-label">2. System HUD</div>
+        </div>
+
+        <!-- 3. CONSTELLATION -->
+        <div class="concept-card" id="constellation-card">
+            <!-- JS will populate this -->
+            <div class="concept-label">3. Constellation</div>
+        </div>
+
+    </div>
+
+<script>
+    // Simple Constellation JS Logic
+    const container = document.getElementById('constellation-card');
+    const nodeCount = 15;
+    const nodes = [];
+
+    for(let i=0; i<nodeCount; i++) {
+        const node = document.createElement('div');
+        node.className = 'node';
+        const x = Math.random() * 260 + 20;
+        const y = Math.random() * 300 + 50;
+        node.style.left = x + 'px';
+        node.style.top = y + 'px';
+        node.style.animationDelay = Math.random() + 's';
+        container.appendChild(node);
+        nodes.push({x, y, el: node});
+    }
+
+    // Connect close nodes
+    nodes.forEach((n1, i) => {
+        nodes.slice(i+1).forEach(n2 => {
+            const dist = Math.hypot(n1.x - n2.x, n1.y - n2.y);
+            if(dist < 100) {
+                const line = document.createElement('div');
+                line.className = 'line';
+                line.style.left = n1.x + 2 + 'px';
+                line.style.top = n1.y + 2 + 'px';
+                line.style.width = dist + 'px';
+                line.style.height = '1px';
+                const angle = Math.atan2(n2.y - n1.y, n2.x - n1.x);
+                line.style.transform = `rotate(${angle}rad)`;
+                container.appendChild(line);
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

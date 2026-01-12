@@ -6,10 +6,15 @@ import SkyMap from './components/SkyMap';
 import SpeedtestWidget from './components/SpeedtestWidget';
 import SettingsModal from './components/SettingsModal';
 
+import DiagnosticsWidget from './components/DiagnosticsWidget';
+
+import SplashScreen from './components/SplashScreen';
+
 function App() {
   const [status, setStatus] = useState(null);
-  const [history, setHistory] = useState(null); // Changed from [] to null based on instruction
+  const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [splashFinished, setSplashFinished] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
   // Status Polling (1s)
@@ -32,6 +37,9 @@ function App() {
     const interval = setInterval(fetchStatus, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Sync splash screen finish
+  const showSplash = loading || !splashFinished;
 
   // History Polling (2s)
   useEffect(() => {
@@ -57,6 +65,10 @@ function App() {
   }, []);
 
   const formatSpeed = (bps) => (bps / 1000000).toFixed(1);
+
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setSplashFinished(true)} />;
+  }
 
   return (
     <div className="app-container" style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -142,6 +154,9 @@ function App() {
                 status={status ? 'good' : 'error'}
               />
 
+              {/* Diagnostics Widget */}
+              <DiagnosticsWidget status={status} />
+
               {/* Metrics Stack */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <StatusCard
@@ -164,7 +179,7 @@ function App() {
                 />
                 <StatusCard
                   title="SNR"
-                  value={status ? (status.snr ? status.snr.toFixed(1) : '---') : '---'}
+                  value={status ? (status.snr !== undefined && status.snr !== null ? status.snr.toFixed(1) : '---') : '---'}
                   sub="dB"
                   icon="signal_cellular_alt"
                 />

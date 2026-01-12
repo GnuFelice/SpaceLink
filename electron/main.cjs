@@ -14,8 +14,7 @@ const speedtestService = new SpeedtestService();
 // Initialize Service (Use Mock for dev if not on Starlink network, controlled by ENV or default)
 const starlinkService = new StarlinkService(false);
 
-const RouterService = require('./services/routerClient.cjs');
-const routerService = new RouterService();
+// RouterService removed
 
 const tleService = require('./services/tleService.cjs');
 
@@ -54,7 +53,26 @@ function saveSettings() {
 // Load on start
 app.whenReady().then(() => {
     loadSettings();
+    updateLocationFromDish(); // Attempt to auto-detect location
 });
+
+// Auto-detect location from Dish
+async function updateLocationFromDish() {
+    try {
+        console.log("Attempting to fetch location from Dish...");
+        const response = await starlinkService.getLocation();
+        if (response && response.get_location && response.get_location.lla) {
+            const { lat, lon } = response.get_location.lla;
+            if (lat && lon) {
+                console.log(`Location detected: ${lat}, ${lon}. Updating settings.`);
+                appSettings = { ...appSettings, latitude: lat, longitude: lon };
+                saveSettings(); // Persist
+            }
+        }
+    } catch (e) {
+        console.warn("Could not auto-detect location (this is normal if GPS is disabled or debug mode is off):", e.message);
+    }
+}
 
 function createWindow() {
     const mainWindow = new BrowserWindow({

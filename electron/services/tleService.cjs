@@ -3,8 +3,10 @@ const fs = require('fs');
 const path = require('path');
 const satellite = require('satellite.js');
 
+const { app } = require('electron');
+
 const TLE_URL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=tle';
-const CACHE_FILE = path.join(__dirname, '../../starlink_tle_cache.txt');
+const CACHE_FILE = path.join(app.getPath('userData'), 'starlink_tle_cache.txt');
 const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 class TleService {

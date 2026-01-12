@@ -7,10 +7,10 @@ function SettingsModal({ onClose }) {
     const [settings, setSettings] = useState({ latitude: '', longitude: '' });
     const [saving, setSaving] = useState(false);
 
-    // router state
-    const [routerData, setRouterData] = useState(null);
-    const [routerLoading, setRouterLoading] = useState(false);
-    const [routerError, setRouterError] = useState(null);
+    // antenna state
+    const [antennaData, setAntennaData] = useState(null);
+    const [loadingAntenna, setLoadingAntenna] = useState(false);
+    const [antennaError, setAntennaError] = useState(null);
 
     // Initial Load
     useEffect(() => {
@@ -27,33 +27,28 @@ function SettingsModal({ onClose }) {
         loadSettings();
     }, []);
 
-    // Load Router data when tab is active
+    // Load Antenna Data when tab active
     useEffect(() => {
-        if (activeTab === 'router' && !routerData) {
-            fetchRouter();
+        if (activeTab === 'antenna' && !antennaData) {
+            setLoadingAntenna(true);
+            setAntennaError(null);
+
+            window.electronAPI.getStarlinkStatus()
+                .then(res => {
+                    // IPC returns { success: true, data: { ... } }
+                    if (res && res.success && res.data && res.data.dish_get_status) {
+                        setAntennaData(res.data.dish_get_status);
+                    } else {
+                        setAntennaError("Nessun dato dall'antenna. (API Error o Payload Mancante)");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    setAntennaError("Errore caricamento dati: " + (err.message || String(err)));
+                })
+                .finally(() => setLoadingAntenna(false));
         }
     }, [activeTab]);
-
-    const fetchRouter = async () => {
-        setRouterLoading(true);
-        setRouterError(null);
-        try {
-            const res = await window.electronAPI.getRouterStatus();
-            if (res.success) {
-                setRouterData(res.data);
-            } else {
-                if (res.bypass_detected) {
-                    setRouterError("Router in Bypass Mode o non raggiungibile.");
-                } else {
-                    setRouterError(res.error || "Errore sconosciuto");
-                }
-            }
-        } catch (err) {
-            setRouterError(err.message);
-        } finally {
-            setRouterLoading(false);
-        }
-    };
 
     const handleSave = async () => {
         setSaving(true);
@@ -70,6 +65,14 @@ function SettingsModal({ onClose }) {
         } finally {
             setSaving(false);
         }
+    };
+
+    const formatUptime = (seconds) => {
+        if (!seconds) return 'N/A';
+        const d = Math.floor(seconds / (3600 * 24));
+        const h = Math.floor(seconds % (3600 * 24) / 3600);
+        const m = Math.floor(seconds % 3600 / 60);
+        return `${d}g ${h}h ${m}m`;
     };
 
     return (
@@ -118,19 +121,19 @@ function SettingsModal({ onClose }) {
                         Generale
                     </button>
                     <button
-                        onClick={() => setActiveTab('router')}
+                        onClick={() => setActiveTab('antenna')}
                         style={{
                             flex: 1,
                             padding: '15px',
-                            background: activeTab === 'router' ? 'transparent' : 'rgba(0,0,0,0.2)',
+                            background: activeTab === 'antenna' ? 'transparent' : 'rgba(0,0,0,0.2)',
                             border: 'none',
-                            color: activeTab === 'router' ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                            color: activeTab === 'antenna' ? 'var(--accent-cyan)' : 'var(--text-secondary)',
                             fontWeight: 'bold',
-                            borderBottom: activeTab === 'router' ? '2px solid var(--accent-cyan)' : 'none',
+                            borderBottom: activeTab === 'antenna' ? '2px solid var(--accent-cyan)' : 'none',
                             cursor: 'pointer'
                         }}
                     >
-                        Router
+                        Info Antenna
                     </button>
                     <button
                         onClick={onClose}
@@ -214,47 +217,75 @@ function SettingsModal({ onClose }) {
                         </div>
                     )}
 
-                    {/* ROUTER TAB */}
-                    {activeTab === 'router' && (
+                    {/* ANTENNA TAB */}
+                    {activeTab === 'antenna' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                            {routerLoading && <div style={{ color: 'var(--text-secondary)' }}>Caricamento dati router...</div>}
+                            {loadingAntenna && !antennaData && <div style={{ color: 'var(--text-secondary)' }}>Caricamento dati antenna...</div>}
 
-                            {routerError && (
+                            {antennaError && (
                                 <div style={{
-                                    background: 'rgba(255, 51, 102, 0.1)',
-                                    border: '1px solid #ff3366',
-                                    color: '#ff3366',
+                                    color: '#ff4d4d',
+                                    background: 'rgba(255, 77, 77, 0.1)',
                                     padding: '15px',
                                     borderRadius: '8px',
-                                    fontSize: '0.9rem'
+                                    border: '1px solid rgba(255, 77, 77, 0.3)',
+                                    marginBottom: '10px'
                                 }}>
-                                    <strong>Stato:</strong> {routerError}
-                                    <div style={{ marginTop: '5px', fontSize: '0.8rem', opacity: 0.8 }}>
-                                        Se hai attivato la modalità bypass, questo è normale.
-                                    </div>
+                                    <strong>Errore:</strong> {antennaError}
                                 </div>
                             )}
 
-                            {routerData && (
+                            {antennaData && (
                                 <>
                                     <div style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '8px' }}>
-                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '5px' }}>ID DISPOSITIVO</div>
-                                        <div style={{ fontFamily: 'monospace' }}>{routerData.device_info?.id || '---'}</div>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>Device Info</div>
+
+                                        <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '5px', fontSize: '0.9rem', marginBottom: '5px' }}>
+                                            <span style={{ color: 'var(--text-secondary)' }}>ID:</span>
+                                            <span style={{ fontFamily: 'monospace' }}>{antennaData.device_info?.id || '---'}</span>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '5px', fontSize: '0.9rem', marginBottom: '5px' }}>
+                                            <span style={{ color: 'var(--text-secondary)' }}>Hardware:</span>
+                                            <span>{antennaData.device_info?.hardware_version || '---'}</span>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '5px', fontSize: '0.9rem', marginBottom: '5px' }}>
+                                            <span style={{ color: 'var(--text-secondary)' }}>Firmware:</span>
+                                            <span style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{antennaData.device_info?.software_version || '---'}</span>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '5px', fontSize: '0.9rem' }}>
+                                            <span style={{ color: 'var(--text-secondary)' }}>Uptime:</span>
+                                            <span>{formatUptime(antennaData.device_state?.uptime_s)}</span>
+                                        </div>
                                     </div>
 
-                                    {routerData.config && (
-                                        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '8px' }}>
-                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '5px' }}>RETE WIFI</div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                                                <span style={{ color: 'var(--text-secondary)' }}>SSID:</span>
-                                                <strong>{routerData.config.network_name || '---'}</strong>
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <span style={{ color: 'var(--text-secondary)' }}>Paese:</span>
-                                                <span>{routerData.config.country_code || '---'}</span>
-                                            </div>
+                                    {/* ALERTS SECTION */}
+                                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '8px' }}>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>Diagnostica</div>
+
+                                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                            {antennaData.alerts && (
+                                                <>
+                                                    <div style={{
+                                                        padding: '5px 10px', borderRadius: '4px', fontSize: '0.8rem',
+                                                        background: antennaData.alerts.motors_stuck ? 'rgba(255,50,50,0.2)' : 'rgba(50,255,100,0.1)',
+                                                        color: antennaData.alerts.motors_stuck ? '#ff5050' : '#50ff80',
+                                                        border: `1px solid ${antennaData.alerts.motors_stuck ? '#ff5050' : '#50ff80'}`
+                                                    }}>
+                                                        Motori: {antennaData.alerts.motors_stuck ? 'BLOCCATI' : 'OK'}
+                                                    </div>
+
+                                                    <div style={{
+                                                        padding: '5px 10px', borderRadius: '4px', fontSize: '0.8rem',
+                                                        background: antennaData.alerts.thermal_throttle ? 'rgba(255,165,0,0.2)' : 'rgba(50,255,100,0.1)',
+                                                        color: antennaData.alerts.thermal_throttle ? 'orange' : '#50ff80',
+                                                        border: `1px solid ${antennaData.alerts.thermal_throttle ? 'orange' : '#50ff80'}`
+                                                    }}>
+                                                        Temp: {antennaData.alerts.thermal_throttle ? 'ALTA' : 'OK'}
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
-                                    )}
+                                    </div>
                                 </>
                             )}
                         </div>

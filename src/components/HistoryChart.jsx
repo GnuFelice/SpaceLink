@@ -45,7 +45,7 @@ const HistoryChart = ({ data, title, dataKey, color, unit, domain, height = 200 
             borderRadius: '16px',
             padding: '20px',
             backdropFilter: 'var(--glass-blur)',
-            backdropFilter: 'var(--glass-blur)',
+
             // marginTop: '20px', // Removed for grid
             height: '100%',
             display: 'flex',

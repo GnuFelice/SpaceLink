@@ -66,7 +66,7 @@ message DishStowResponse {}
 message DishGetStatusResponse {
     DeviceInfo device_info = 1;
     DeviceState device_state = 2; // Fixed field 2
-    // DishAlerts alerts = 105;
+    DishAlerts alerts = 105;
     // float snr = 106;
     
     float downlink_throughput_bps = 1007;
