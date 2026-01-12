@@ -10,6 +10,7 @@ import React, { useEffect, useState } from 'react';
 function SkyMap({ obstructionData, uptime }) {
     const [satellites, setSatellites] = useState([]);
     const [loadingSats, setLoadingSats] = useState(true);
+    const [hoveredSat, setHoveredSat] = useState(null);
 
     // Fetch Satellites Logic
     useEffect(() => {
@@ -97,6 +98,23 @@ function SkyMap({ obstructionData, uptime }) {
         return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z`;
     };
 
+
+
+    // Memoize projected positions to avoid re-calc on hover
+    // We include originalIndex to match with hover logic if needed, or just use the new object
+    const satellitePositions = React.useMemo(() => {
+        return satellites.map((sat, i) => {
+            const pos = polarToCartesian(sat.azimuth, sat.elevation);
+            const isHighSignal = sat.elevation > 60;
+            return {
+                ...sat,
+                pos,
+                isHighSignal,
+                originalIndex: i
+            };
+        });
+    }, [satellites]);
+
     return (
         <div className="widget" style={{
             background: 'var(--bg-panel)',
@@ -150,6 +168,34 @@ function SkyMap({ obstructionData, uptime }) {
                 {/* CSS Scanner Animation Layer */}
                 <div className="radar-scanner" style={{ opacity: 0.6, zIndex: 10 }}></div>
 
+                {/* Tooltip Layer (HTML on top of SVG) */}
+                {hoveredSat && (
+                    <div style={{
+                        position: 'absolute',
+                        top: `${hoveredSat.pos.y}%`,
+                        left: `${hoveredSat.pos.x}%`,
+                        zIndex: 20,
+                        background: 'rgba(10, 14, 23, 0.9)',
+                        border: '1px solid var(--accent-cyan)',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        transform: 'translate(-50%, -120%)', // Shift up to avoid cursor
+                        pointerEvents: 'none',
+                        boxShadow: '0 0 15px rgba(0, 243, 255, 0.3)',
+                        minWidth: '150px',
+                        backdropFilter: 'blur(4px)'
+                    }}>
+                        <div style={{ color: '#fff', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '4px' }}>
+                            {hoveredSat.data.name}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                            <div>Alt: <span style={{ color: 'var(--accent-cyan)' }}>{hoveredSat.data.height} km</span></div>
+                            <div>Vel: <span style={{ color: 'var(--accent-cyan)' }}>{hoveredSat.data.velocity} km/s</span></div>
+                            <div>El: {hoveredSat.data.elevation.toFixed(1)}°</div>
+                        </div>
+                    </div>
+                )}
+
                 <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%', maxHeight: '100%', maxWidth: '100%' }}>
                     <defs>
                         <radialGradient id="clearSkyGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
@@ -169,9 +215,6 @@ function SkyMap({ obstructionData, uptime }) {
                                 fill = '#ff3366';
                                 opacity = 0.5 + (val * 4);
                                 if (opacity > 0.9) opacity = 0.9;
-                            } else {
-                                // Subtle highlight for "Known Clear" vs "Unknown"?
-                                // Just use transparent for clear to let the cool grid show
                             }
 
                             return (
@@ -209,19 +252,23 @@ function SkyMap({ obstructionData, uptime }) {
 
                     {/* LAYER 3: Satellites */}
                     <g className="satellites-layer">
-                        {satellites.map((sat, i) => {
-                            const pos = polarToCartesian(sat.azimuth, sat.elevation);
-                            const isHighSignal = sat.elevation > 60;
+                        {satellitePositions.map((sat, i) => {
+                            // hovering logic checks original index or just identity if we passed whole object
+                            const isHovered = hoveredSat && hoveredSat.originalIndex === sat.originalIndex;
+
                             return (
                                 <circle
                                     key={`sat-${i}`}
-                                    cx={pos.x}
-                                    cy={pos.y}
-                                    r={isHighSignal ? 0.7 : 0.4}
-                                    fill={isHighSignal ? "#ffffff" : "#00f3ff"}
-                                    opacity={isHighSignal ? 0.9 : 0.6}
+                                    cx={sat.pos.x}
+                                    cy={sat.pos.y}
+                                    r={isHovered ? 2.0 : (sat.isHighSignal ? 0.7 : 0.4)}
+                                    fill={sat.isHighSignal ? "#ffffff" : "#00f3ff"}
+                                    opacity={sat.isHighSignal ? 0.9 : 0.6}
+                                    style={{ transition: 'all 0.2s ease', cursor: 'pointer' }}
+                                    onMouseEnter={() => setHoveredSat({ index: i, data: sat, pos: sat.pos, originalIndex: sat.originalIndex })}
+                                    onMouseLeave={() => setHoveredSat(null)}
                                 >
-                                    {isHighSignal && (
+                                    {sat.isHighSignal && !isHovered && (
                                         <animate
                                             attributeName="r"
                                             values="0.7;1.0;0.7"

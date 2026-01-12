@@ -96,14 +96,26 @@ class TleService {
             const elevation = satellite.radiansToDegrees(lookAngles.elevation);
             const rangeSat = lookAngles.rangeSat; // in km
 
+            // Calculate Velocity (scalar speed in km/s)
+            const velocityEci = positionAndVelocity.velocity;
+            const velocity = Math.sqrt(
+                Math.pow(velocityEci.x, 2) +
+                Math.pow(velocityEci.y, 2) +
+                Math.pow(velocityEci.z, 2)
+            );
+
+            // Calculate Altitude (Height in km)
+            const positionGd = satellite.eciToGeodetic(positionEci, gmst);
+            const height = positionGd.height;
+
             if (elevation > minElevation) {
                 visibleSats.push({
                     name: tle.name,
                     azimuth,
                     elevation,
                     range: rangeSat,
-                    // Simple categorization based on elevation
-                    // Higher elevation = better signal
+                    velocity: velocity.toFixed(2),
+                    height: height.toFixed(1),
                     signalQuality: Math.min(100, (elevation / 90) * 100)
                 });
             }
