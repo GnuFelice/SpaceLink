@@ -48,6 +48,16 @@
 
 SpaceLink communicates directly with the Starlink hardware using gRPC. It auto-detects your location from the dish to rendering the satellite map accurately.
 
+## ⚠️ Note on Windows Security
+
+When installing, you might see a **"Windows protected your PC"** (SmartScreen) warning. This happens because the application is not code-signed with a paid certificate ($$$).
+
+To install:
+1. Click **"More Info"** (Ulteriori informazioni).
+2. Click **"Run Anyway"** (Esegui comunque).
+
+This is normal for open-source hobby projects.
+
 ## 📄 License
 
 MIT License. See [LICENSE](LICENSE) for details.
