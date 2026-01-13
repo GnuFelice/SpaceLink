@@ -48,12 +48,12 @@ function SpeedtestWidget() {
 
     return (
         <div className="widget" style={{
-            background: 'var(--bg-panel)',
-            border: '1px solid var(--border-glass)',
-            borderRadius: '16px',
+            background: 'var(--md-surface-variant)',
+            border: '1px solid var(--md-outline)',
+            borderRadius: 'var(--md-radius)',
             padding: '16px',
-            backdropFilter: 'var(--glass-blur)',
-            height: 'fit-content', // Changed from 100% to fit-content
+            boxShadow: 'var(--md-elevation-1)',
+            height: 'fit-content',
             display: 'flex',
             flexDirection: 'column',
             minWidth: '250px',
@@ -64,26 +64,31 @@ function SpeedtestWidget() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <h3 style={{
                     margin: 0,
-                    color: 'var(--text-secondary)',
+                    color: 'var(--md-on-surface-variant)',
                     fontSize: '0.8rem',
                     textTransform: 'uppercase',
-                    letterSpacing: '1px'
+                    letterSpacing: '1px',
+                    fontWeight: 500
                 }}>Speedtest (LibreSpeed)</h3>
 
                 {!running && (
                     <button
                         onClick={startTest}
                         style={{
-                            background: 'rgba(0, 243, 255, 0.1)',
-                            border: '1px solid var(--accent-cyan)',
-                            color: 'var(--accent-cyan)',
-                            padding: '4px 10px',
-                            borderRadius: '6px',
+                            background: 'var(--md-primary)',
+                            border: 'none',
+                            color: 'var(--md-on-surface)',
+                            padding: '6px 12px',
+                            borderRadius: 'var(--md-radius-small)',
                             cursor: 'pointer',
-                            fontWeight: 'bold',
+                            fontWeight: 600,
                             textTransform: 'uppercase',
-                            fontSize: '0.7rem'
+                            fontSize: '0.7rem',
+                            boxShadow: 'var(--md-elevation-1)',
+                            transition: 'box-shadow 0.2s ease'
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.boxShadow = 'var(--md-elevation-2)'}
+                        onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'var(--md-elevation-1)'}
                     >
                         Avvia Test
                     </button>

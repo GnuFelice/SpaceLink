@@ -3,30 +3,50 @@
 }
 
 :root {
-  /* Colors */
-  --bg-deep: #0a0e17;
-  --bg-panel: rgba(20, 26, 38, 0.7);
-  --accent-cyan: #00f3ff;
-  --accent-blue: #0077ff;
-  --text-primary: #ffffff;
-  --text-secondary: #8b9bb4;
-  --border-glass: rgba(0, 243, 255, 0.1);
+  /* Material Design Colors */
+  --md-primary: #1E88E5;
+  --md-primary-container: #0D47A1;
+  --md-secondary: #26C6DA;
+  --md-surface: #121212;
+  --md-surface-variant: #1E1E1E;
+  --md-surface-elevated: #1F1F1F;
+  --md-on-surface: #FFFFFF;
+  --md-on-surface-variant: #B0BEC5;
+  --md-outline: rgba(255, 255, 255, 0.12);
+  --md-outline-variant: rgba(255, 255, 255, 0.08);
+  --md-error: #CF6679;
+  --md-success: #81C784;
+  --md-warning: #FFB74D;
 
-  /* Effects */
-  --glass-blur: blur(12px);
-  --neon-glow: 0 0 10px rgba(0, 243, 255, 0.3);
+  /* Material Elevation (Box Shadows) */
+  --md-elevation-0: none;
+  --md-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  --md-elevation-2: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  --md-elevation-3: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  --md-elevation-4: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+
+  /* Shape System */
+  --md-radius: 12px;
+  --md-radius-small: 8px;
+  --md-radius-large: 16px;
 
   /* Layout */
   --header-height: 48px;
+
+  /* Legacy compatibility (will be phased out) */
+  --bg-deep: var(--md-surface);
+  --text-primary: var(--md-on-surface);
+  --text-secondary: var(--md-on-surface-variant);
+  --accent-cyan: var(--md-secondary);
+  --accent-blue: var(--md-primary);
 }
 
 body {
   margin: 0;
-  background-color: var(--bg-deep);
-  color: var(--text-primary);
+  background-color: var(--md-surface);
+  color: var(--md-on-surface);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow: hidden;
-  /* App-like feel */
   user-select: none;
 }
 
@@ -35,16 +55,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-deep);
+  background: var(--md-surface);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-panel);
+  background: var(--md-surface-variant);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-blue);
+  background: var(--md-primary);
 }
 
 .status-grid {
@@ -116,14 +136,14 @@ body {
   height: 100%;
 }
 
-/* Scrollbar refinement */
+/* Refined scrollbar styles */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 243, 255, 0.2);
+  background: var(--md-outline);
   border-radius: 3px;
 }
 

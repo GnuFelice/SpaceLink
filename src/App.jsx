@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import StatusCard from './components/StatusCard';
-import HistoryChart from './components/HistoryChart';
-import SkyMap from './components/SkyMap';
-import SpeedtestWidget from './components/SpeedtestWidget';
-import SettingsModal from './components/SettingsModal';
-import DiagnosticsWidget from './components/DiagnosticsWidget';
-import AlignmentWidget from './components/AlignmentWidget';
+import StatusCard from './components/StatusCard'; // Still needed for splash/loading logic if reused, or remove if logic moved
 import SplashScreen from './components/SplashScreen';
-import EventLogWidget from './components/EventLogWidget';
+import SettingsModal from './components/SettingsModal';
+import DashboardView from './components/DashboardView';
+import EventRegistryView from './components/EventRegistryView';
 
 function App() {
+  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard' | 'registry'
   const [status, setStatus] = useState(null);
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,8 +34,6 @@ function App() {
       try {
         const result = await window.electronAPI.getStarlinkStatus();
         if (result.success) {
-          // console.log("Starlink Status received:", result.data.dish_get_status);
-          // console.log("Dish Capabilities:", result.data.dish_get_status.capabilities); // Check this!
           setStatus(result.data.dish_get_status);
         }
       } catch (err) {
@@ -91,13 +86,55 @@ function App() {
 
   return (
     <div className="app-container" style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Compact Header with Controls */}
-      <header className="app-header" style={{ padding: '0 20px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-glass)' }}>
-        <div className="logo-section" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div className="logo-icon" style={{ fontSize: '1.2rem' }}>🛰️</div>
-          <h1 style={{ margin: 0, fontSize: '1.1rem', background: 'linear-gradient(90deg, #fff, #8b9bb4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            SpaceLink <span className="version" style={{ fontSize: '0.7rem', opacity: 0.5, WebkitTextFillColor: 'initial', color: '#8b9bb4' }}>{appVersion}</span>
-          </h1>
+      {/* Compact Header with Controls and Navigation */}
+      <header className="app-header" style={{ padding: '0 20px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--md-outline)', background: 'var(--md-surface-variant)', boxShadow: 'var(--md-elevation-2)' }}>
+        <div className="logo-section" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="logo-icon" style={{ fontSize: '1.4rem' }}>🛰️</div>
+            <h1 style={{ margin: 0, fontSize: '1.2rem', background: 'linear-gradient(90deg, #fff, #8b9bb4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 700 }}>
+              SpaceLink <span className="version" style={{ fontSize: '0.7rem', opacity: 0.5, WebkitTextFillColor: 'initial', color: '#8b9bb4' }}>{appVersion}</span>
+            </h1>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div style={{ display: 'flex', gap: '10px', marginLeft: '30px', background: 'rgba(0,0,0,0.2)', padding: '5px', borderRadius: '8px' }}>
+            <button
+              onClick={() => setActiveView('dashboard')}
+              style={{
+                background: activeView === 'dashboard' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                border: 'none',
+                color: activeView === 'dashboard' ? '#fff' : 'var(--text-secondary)',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: activeView === 'dashboard' ? 'bold' : 'normal',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              📊 Dashboard
+            </button>
+            <button
+              onClick={() => setActiveView('registry')}
+              style={{
+                background: activeView === 'registry' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                border: 'none',
+                color: activeView === 'registry' ? '#fff' : 'var(--text-secondary)',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: activeView === 'registry' ? 'bold' : 'normal',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              📜 Registro Eventi
+            </button>
+          </div>
         </div>
 
         {/* Header Controls */}
@@ -112,7 +149,7 @@ function App() {
             }}
             className="btn-icon"
             title="Riavvia"
-            style={{ background: 'transparent', border: '1px solid rgba(255, 51, 102, 0.5)', color: '#ff3366', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer' }}
+            style={{ background: 'transparent', border: '1px solid rgba(255, 51, 102, 0.5)', color: '#ff3366', borderRadius: '4px', padding: '6px 10px', cursor: 'pointer', fontSize: '1.2rem' }}
           >
             🔄
           </button>
@@ -129,7 +166,7 @@ function App() {
                 }}
                 className="btn-icon"
                 title="Stow (Riponi)"
-                style={{ background: 'transparent', border: '1px solid rgba(255, 183, 0, 0.5)', color: '#ffb700', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: '1px solid rgba(255, 183, 0, 0.5)', color: '#ffb700', borderRadius: '4px', padding: '6px 10px', cursor: 'pointer', fontSize: '1.2rem' }}
               >
                 ⬇️
               </button>
@@ -143,7 +180,7 @@ function App() {
                 }}
                 className="btn-icon"
                 title="Unstow (Apri)"
-                style={{ background: 'transparent', border: '1px solid rgba(0, 243, 255, 0.5)', color: '#00f3ff', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: '1px solid rgba(0, 243, 255, 0.5)', color: '#00f3ff', borderRadius: '4px', padding: '6px 10px', cursor: 'pointer', fontSize: '1.2rem' }}
               >
                 ⬆️
               </button>
@@ -154,7 +191,7 @@ function App() {
             onClick={() => setShowSettings(true)}
             className="btn-icon"
             title="Impostazioni"
-            style={{ background: 'transparent', border: '1px solid rgba(255, 255, 255, 0.3)', color: '#fff', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer' }}
+            style={{ background: 'transparent', border: '1px solid rgba(255, 255, 255, 0.3)', color: '#fff', borderRadius: '4px', padding: '6px 10px', cursor: 'pointer', fontSize: '1.2rem' }}
           >
             ⚙️
           </button>
@@ -162,104 +199,28 @@ function App() {
         </div>
       </header>
 
-      <main className="dashboard-compact">
-        {loading && !status ? (
-          <div className="loading-screen" style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-cyan)' }}>
+      <main style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        {loading && !status && !splashFinished ? (
+          // This state is visually covered by SplashScreen, effectively.
+          // Leaving minimal placeholder just in case splash finishes before data.
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--accent-cyan)' }}>
             Connessione al Dish in corso...
           </div>
         ) : (
           <>
-            {/* LEFT COLUMN: Sidebar (Metrics) */}
-            <aside className="dashboard-sidebar">
-              {/* Primary Status Card */}
-              <StatusCard
-                title="Stato"
-                value={status ? 'ONLINE' : 'OFFLINE'}
-                icon={status ? 'wifi' : 'wifi_off'}
-                status={status ? 'good' : 'error'}
-              />
-
-              {(needsAlignment || status?.alignment_stats) && (
-                <AlignmentWidget alignmentStats={status?.alignment_stats} />
-              )}
-
-              {/* Diagnostics Widget - Pass capabilities for sensor filtering */}
-              <DiagnosticsWidget status={status} />
-
-              {/* Metrics Stack */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <StatusCard
-                  title="Download"
-                  value={status ? formatSpeed(status.downlink_throughput_bps) : '---'}
-                  sub="Mbps"
-                  icon="arrow_downward"
-                />
-                <StatusCard
-                  title="Upload"
-                  value={status ? formatSpeed(status.uplink_throughput_bps) : '---'}
-                  sub="Mbps"
-                  icon="arrow_upward"
-                />
-                <StatusCard
-                  title="Latenza"
-                  value={status ? Math.round(status.pop_ping_latency_ms) : '---'}
-                  sub="ms"
-                  icon="speed"
-                />
-                <StatusCard
-                  title="SNR"
-                  value={status ? (status.snr !== undefined && status.snr !== null ? status.snr.toFixed(1) : '---') : '---'}
-                  sub="dB"
-                  icon="signal_cellular_alt"
+            {activeView === 'dashboard' && (
+              <div className="dashboard-content" style={{ height: '100%', padding: '20px', boxSizing: 'border-box' }}>
+                <DashboardView
+                  status={status}
+                  history={history}
+                  formatSpeed={formatSpeed}
+                  needsAlignment={needsAlignment}
                 />
               </div>
-
-              {/* SpeedtestWidget moved to main dashboard */}
-
-            </aside>
-
-            {/* RIGHT COLUMN: Main Visuals */}
-            <section className="dashboard-main">
-              {/* Sky Map (Dominant) */}
-              <div style={{ width: '100%', height: '100%', minHeight: '0', gridColumn: '1 / 2' }}>
-                <SkyMap
-                  obstructionData={status?.obstruction_stats}
-                  uptime={status?.device_state?.uptime_s}
-                />
-              </div>
-
-              {/* Speedtest Widget & Event Log (Right Column) */}
-              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px', gridColumn: '2 / 3', height: '100%', minHeight: '0' }}>
-                <div style={{ flex: '0 0 auto' }}>
-                  <SpeedtestWidget />
-                </div>
-                <div style={{ flex: '1 1 auto', minHeight: '0' }}>
-                  <EventLogWidget />
-                </div>
-              </div>
-
-              {/* History Charts (Bottom Row) */}
-              <div className="mini-charts-row" style={{ gridColumn: '1 / -1' }}>
-                <div style={{ flex: 1 }}>
-                  <HistoryChart
-                    title="Velocità"
-                    data={history}
-                    dataKey="downlink_mbps"
-                    color="#00f3ff"
-                    unit=" Mbps"
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <HistoryChart
-                    title="Latenza"
-                    data={history}
-                    dataKey="latency"
-                    color="#ffb700"
-                    unit=" ms"
-                  />
-                </div>
-              </div>
-            </section>
+            )}
+            {activeView === 'registry' && (
+              <EventRegistryView />
+            )}
           </>
         )}
       </main>

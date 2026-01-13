@@ -15,11 +15,11 @@ const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
             <div style={{
-                background: 'rgba(10, 14, 23, 0.9)',
-                border: '1px solid var(--accent-cyan)',
+                background: 'var(--md-surface-elevated)',
+                border: '1px solid var(--md-secondary)',
                 padding: '10px',
-                borderRadius: '8px',
-                backdropFilter: 'blur(4px)'
+                borderRadius: 'var(--md-radius-small)',
+                boxShadow: 'var(--md-elevation-2)'
             }}>
                 <p style={{ margin: 0, color: '#fff', fontSize: '0.8rem' }}>
                     {new Date(label).toLocaleTimeString()}
@@ -40,13 +40,11 @@ const HistoryChart = ({ data, title, dataKey, color, unit, domain, height = 200 
 
     return (
         <div className="widget" style={{
-            background: 'var(--bg-panel)',
-            border: '1px solid var(--border-glass)',
-            borderRadius: '16px',
+            background: 'var(--md-surface-variant)',
+            border: '1px solid var(--md-outline)',
+            borderRadius: 'var(--md-radius)',
             padding: '20px',
-            backdropFilter: 'var(--glass-blur)',
-
-            // marginTop: '20px', // Removed for grid
+            boxShadow: 'var(--md-elevation-1)',
             height: '100%',
             display: 'flex',
             flexDirection: 'column'

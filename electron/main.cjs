@@ -10,9 +10,7 @@ const tleService = require('./services/tleService.cjs');
 const TelemetryDB = require('./db/database.cjs');
 
 // Initialize Database
-// Initialize Database
 const db = new TelemetryDB();
-// Clean up redundant connection logs (Keep only latest)
 db.pruneRedundantEvents('INFO', 'Connessione stabilita con Starlink%');
 
 // Initialize Services
@@ -216,8 +214,12 @@ function createWindow() {
         return db.getHistory(60); // Get last 60 seconds by default
     });
 
-    ipcMain.handle('events:get', async (_, limit) => {
-        return db.getEvents(limit || 50);
+    ipcMain.handle('events:get', async (_, limit, offset, filters) => {
+        return db.getEvents(limit || 50, offset || 0, filters || {});
+    });
+
+    ipcMain.handle('events:count', async (_, filters) => {
+        return db.getEventCount(filters || {});
     });
 
 

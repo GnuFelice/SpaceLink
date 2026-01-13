@@ -96,18 +96,79 @@ class TelemetryDB {
         }
     }
 
-    getEvents(limit = 50) {
+    getEvents(limit = 50, offset = 0, filters = {}) {
         try {
-            const stmt = this.db.prepare(`
-        SELECT * FROM events ORDER BY timestamp DESC LIMIT ?
-      `);
-            return stmt.all(limit).map(evt => ({
+            let query = `SELECT * FROM events`;
+            const params = [];
+            const conditions = [];
+
+            // Filter by exact type (e.g. 'ERROR') or exclude types (e.g. NOT 'LOGIN')
+            if (filters.type) {
+                conditions.push(`UPPER(type) = UPPER(?)`);
+                params.push(filters.type);
+            }
+            if (filters.excludeTypes && Array.isArray(filters.excludeTypes) && filters.excludeTypes.length > 0) {
+                const placeholders = filters.excludeTypes.map(() => '?').join(',');
+                conditions.push(`type NOT IN (${placeholders})`);
+                params.push(...filters.excludeTypes);
+            }
+
+            // Search query (message or details)
+            if (filters.search) {
+                conditions.push(`(message LIKE ? OR details LIKE ?)`);
+                const term = `%${filters.search}%`;
+                params.push(term, term);
+            }
+
+            if (conditions.length > 0) {
+                query += ` WHERE ` + conditions.join(' AND ');
+            }
+
+            query += ` ORDER BY timestamp DESC LIMIT ? OFFSET ?`;
+            params.push(limit, offset);
+
+            const stmt = this.db.prepare(query);
+            return stmt.all(...params).map(evt => ({
                 ...evt,
                 details: evt.details ? JSON.parse(evt.details) : {}
             }));
         } catch (err) {
             console.error('DB Event Query Error:', err);
             return [];
+        }
+    }
+
+    getEventCount(filters = {}) {
+        try {
+            let query = `SELECT COUNT(*) as count FROM events`;
+            const params = [];
+            const conditions = [];
+
+            if (filters.type) {
+                conditions.push(`UPPER(type) = UPPER(?)`);
+                params.push(filters.type);
+            }
+            if (filters.excludeTypes && Array.isArray(filters.excludeTypes) && filters.excludeTypes.length > 0) {
+                const placeholders = filters.excludeTypes.map(() => '?').join(',');
+                conditions.push(`type NOT IN (${placeholders})`);
+                params.push(...filters.excludeTypes);
+            }
+            if (filters.search) {
+                conditions.push(`(message LIKE ? OR details LIKE ?)`);
+                const term = `%${filters.search}%`;
+                params.push(term, term);
+            }
+
+            if (conditions.length > 0) {
+                query += ` WHERE ` + conditions.join(' AND ');
+            }
+
+            const stmt = this.db.prepare(query);
+            const result = stmt.get(...params);
+            return result ? result.count : 0;
+        } catch (err) {
+            console.error('DB Count Error:', err);
+            return 0;
         }
     }
 

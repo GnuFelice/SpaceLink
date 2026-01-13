@@ -12,7 +12,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getSettings: () => ipcRenderer.invoke('settings:get'),
     saveSettings: (settings) => ipcRenderer.invoke('settings:set', settings),
     getAppVersion: () => ipcRenderer.invoke('app:version'),
-    getEvents: (limit) => ipcRenderer.invoke('events:get', limit),
+    getEvents: (limit, offset, filters) => ipcRenderer.invoke('events:get', limit, offset, filters),
+    getEventCount: (filters) => ipcRenderer.invoke('events:count', filters),
 
     // Speedtest
     runSpeedtest: () => ipcRenderer.invoke('speedtest:run'),

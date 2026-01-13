@@ -78,14 +78,7 @@ message DishGetStatusResponse {
     float snr = 1011;
     float pop_ping_latency_ms = 1012;
     DishObstructionStats obstruction_stats = 1006;
-    AlignmentStats alignment_stats = 1013; // Gen 3 Alignment Data
-    // bytes alignment_stats_raw = 1013; 
-    
-    // Probing for missing data
-    // bytes probe_1010 = 1010;
-    // bytes probe_1014 = 1014;
-    // bytes probe_1015 = 1015;
-    // bytes probe_1016 = 1016;
+    AlignmentStats alignment_stats = 1013;
 }
 
 message AlignmentStats {
