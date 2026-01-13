@@ -51,21 +51,21 @@ function SpeedtestWidget() {
             background: 'var(--bg-panel)',
             border: '1px solid var(--border-glass)',
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             backdropFilter: 'var(--glass-blur)',
-            // marginTop: '20px' // Removed for grid layout
-            height: '100%',
+            height: 'fit-content', // Changed from 100% to fit-content
             display: 'flex',
             flexDirection: 'column',
-            minWidth: '300px', // Prevent shrinking too much
-            maxWidth: '100%',  // Allow fill but respect parent
-            overflow: 'hidden' // Prevent internal expansion from pushing bounds
+            minWidth: '250px',
+            maxWidth: '100%',
+            overflow: 'hidden',
+            boxSizing: 'border-box'
         }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <h3 style={{
                     margin: 0,
                     color: 'var(--text-secondary)',
-                    fontSize: '0.9rem',
+                    fontSize: '0.8rem',
                     textTransform: 'uppercase',
                     letterSpacing: '1px'
                 }}>Speedtest (LibreSpeed)</h3>
@@ -77,12 +77,12 @@ function SpeedtestWidget() {
                             background: 'rgba(0, 243, 255, 0.1)',
                             border: '1px solid var(--accent-cyan)',
                             color: 'var(--accent-cyan)',
-                            padding: '8px 16px',
-                            borderRadius: '8px',
+                            padding: '4px 10px',
+                            borderRadius: '6px',
                             cursor: 'pointer',
                             fontWeight: 'bold',
                             textTransform: 'uppercase',
-                            fontSize: '0.8rem'
+                            fontSize: '0.7rem'
                         }}
                     >
                         Avvia Test
@@ -90,46 +90,45 @@ function SpeedtestWidget() {
                 )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, justifyContent: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>{/* Removed flex: 1 */}
                 {/* Download */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>DOWNLOAD</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent-cyan)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>DOWNLOAD</div>
+                    <div style={{ fontSize: '1.0rem', fontWeight: 'bold', color: 'var(--accent-cyan)' }}>
                         {progress?.type === 'download' ? progress.speed.toFixed(1) : (result?.download ? result.download.toFixed(1) : '---')}
-                        <span style={{ fontSize: '0.8rem', fontWeight: 'normal', color: 'var(--text-secondary)', marginLeft: '4px' }}>Mbps</span>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 'normal', color: 'var(--text-secondary)', marginLeft: '4px' }}>Mbps</span>
                     </div>
                 </div>
 
                 {/* Upload */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>UPLOAD</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ff00ff' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>UPLOAD</div>
+                    <div style={{ fontSize: '1.0rem', fontWeight: 'bold', color: '#ff00ff' }}>
                         {progress?.type === 'upload' ? progress.speed.toFixed(1) : (result?.upload ? result.upload.toFixed(1) : '---')}
-                        <span style={{ fontSize: '0.8rem', fontWeight: 'normal', color: 'var(--text-secondary)', marginLeft: '4px' }}>Mbps</span>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 'normal', color: 'var(--text-secondary)', marginLeft: '4px' }}>Mbps</span>
                     </div>
                 </div>
 
                 {/* Ping */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>PING</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ffb700' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>PING</div>
+                    <div style={{ fontSize: '1.0rem', fontWeight: 'bold', color: '#ffb700' }}>
                         {result?.ping ? result.ping.toFixed(0) : '---'}
-                        <span style={{ fontSize: '0.8rem', fontWeight: 'normal', color: 'var(--text-secondary)', marginLeft: '4px' }}>ms</span>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 'normal', color: 'var(--text-secondary)', marginLeft: '4px' }}>ms</span>
                     </div>
                 </div>
             </div>
 
             {/* Server Info or Progress Bar */}
-            <div style={{ marginTop: '20px', minHeight: '24px', fontSize: '0.85rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+            <div style={{ marginTop: '10px', minHeight: '16px', fontSize: '0.75rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
                 {running && (
                     <div style={{ color: 'var(--accent-cyan)', animation: 'pulse 1.5s infinite' }}>
-                        Esecuzione test in corso... {progress?.type === 'download' ? '(Download)' : (progress?.type === 'upload' ? '(Upload)' : '')}
+                        Test in corso... {progress?.type === 'download' ? '(DL)' : (progress?.type === 'upload' ? '(UL)' : '')}
                     </div>
                 )}
                 {result && !running && (
-                    <div>
-                        Server: <span style={{ color: 'white', marginRight: '15px' }}>{result.server}</span>
-                        IP: <span style={{ color: 'var(--accent-cyan)' }}>{result.ip}</span>
+                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ color: 'white' }}>{result.server}</span>
                     </div>
                 )}
                 {error && (

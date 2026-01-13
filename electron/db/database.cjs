@@ -28,6 +28,87 @@ class TelemetryDB {
         this.db.prepare(`
       CREATE INDEX IF NOT EXISTS idx_timestamp ON telemetry(timestamp)
     `).run();
+
+        // Create events table
+        this.db.prepare(`
+      CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp INTEGER,
+        type TEXT, -- 'INFO', 'WARNING', 'ERROR'
+        message TEXT,
+        details TEXT -- JSON string
+      )
+    `).run();
+    }
+
+    insertEvent(type, message, details = {}) {
+        try {
+            const stmt = this.db.prepare(`
+        INSERT INTO events (timestamp, type, message, details)
+        VALUES (?, ?, ?, ?)
+      `);
+            stmt.run(details.timestamp || Date.now(), type, message, JSON.stringify(details));
+        } catch (err) {
+            console.error('DB Event Insert Error:', err);
+        }
+    }
+
+    checkExistingEvent(timestamp, type) {
+        try {
+            const stmt = this.db.prepare(`
+                SELECT id FROM events WHERE timestamp = ? AND type = ?
+            `);
+            const result = stmt.get(timestamp, type);
+            return !!result;
+        } catch (err) {
+            return false;
+        }
+    }
+
+    // Keep only the latest event of a specific type/message, delete older ones
+    pruneRedundantEvents(type, messagePattern) {
+        try {
+            // Find the latest one of this pattern
+            const latest = this.db.prepare(`
+                SELECT id, timestamp FROM events 
+                WHERE type = ? AND message LIKE ? 
+                ORDER BY timestamp DESC LIMIT 1
+            `).get(type, messagePattern);
+
+            if (latest) {
+                // Delete ANY event matching the pattern that has a timestamp older than the latest,
+                // OR has the same timestamp but a smaller ID (to handle exact duplicates)
+                const info = this.db.prepare(`
+                    DELETE FROM events 
+                    WHERE type = ? 
+                    AND message LIKE ? 
+                    AND (timestamp < ? OR (timestamp = ? AND id < ?))
+                `).run(type, messagePattern, latest.timestamp, latest.timestamp, latest.id);
+
+                if (info.changes > 0) {
+                    console.log(`Pruned ${info.changes} redundant '${messagePattern}' events.`);
+                }
+            } else {
+                console.log(`No events found matching '${messagePattern}' to prune.`);
+            }
+        } catch (err) {
+            console.error('Prune Error:', err);
+        }
+    }
+
+    getEvents(limit = 50) {
+        try {
+            const stmt = this.db.prepare(`
+        SELECT * FROM events ORDER BY timestamp DESC LIMIT ?
+      `);
+            return stmt.all(limit).map(evt => ({
+                ...evt,
+                details: evt.details ? JSON.parse(evt.details) : {}
+            }));
+        } catch (err) {
+            console.error('DB Event Query Error:', err);
+            return [];
+        }
     }
 
     insertStats(stats) {

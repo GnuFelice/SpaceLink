@@ -10,7 +10,10 @@ const tleService = require('./services/tleService.cjs');
 const TelemetryDB = require('./db/database.cjs');
 
 // Initialize Database
+// Initialize Database
 const db = new TelemetryDB();
+// Clean up redundant connection logs (Keep only latest)
+db.pruneRedundantEvents('INFO', 'Connessione stabilita con Starlink%');
 
 // Initialize Services
 // Use Mock if not on Starlink network (controlled by ENV or default)
@@ -25,6 +28,16 @@ const DEFAULT_SETTINGS = {
 };
 
 let appSettings = { ...DEFAULT_SETTINGS };
+
+// --- State Tracking for Events ---
+let lastConnected = false;
+let lastAlerts = {};
+
+// Helper to log event
+function logSystemEvent(type, message, details = {}) {
+    console.log(`[EVENT ${type}] ${message}`);
+    db.insertEvent(type, message, details);
+}
 
 function loadSettings() {
     try {
@@ -71,6 +84,61 @@ async function updateLocationFromDish() {
     }
 }
 
+
+// --- Outage Sync Logic ---
+async function syncOutageHistory() {
+    try {
+        const history = await starlinkService.getHistory();
+        if (history && history.outages) {
+            // Ensure array
+            const outages = Array.isArray(history.outages) ? history.outages : [];
+
+            let newCount = 0;
+            for (const outage of outages) {
+                // Starlink uses GPS Time (start from 1980) in nanoseconds
+                // Unix Epoch is 1970
+                // Offset is roughly 315964800 seconds (10 years + leap seconds)
+                // Precise offset: GPS Epoch is Jan 6, 1980 00:00:00 UTC
+                // UNIX Epoch is Jan 1, 1970 00:00:00 UTC
+                // Difference is 315964800 seconds exactly (plus leap seconds since 1980)
+                // Currently GPS is ahead of UTC by ~18 seconds (leap seconds)
+                // But for general display, just adding the 10 years offset is close enough.
+                // 315964800000 milliseconds.
+
+                const gpsTimeNs = BigInt(outage.start_timestamp_ns);
+                const gpsTimeMs = Number(gpsTimeNs / 1000000n);
+
+                // Convert GPS Time to Unix Time (approximate)
+                // GPS Epoch (1980) -> Unix Epoch (1970) delta is 315964800000ms
+                const unixTimeMs = gpsTimeMs + 315964800000;
+
+                const cause = outage.cause;
+
+                // Avoid duplicate logging
+                if (!db.checkExistingEvent(unixTimeMs, 'HISTORY_ALARM')) {
+                    const durationSec = Number(BigInt(outage.duration_ns) / 1000000000n);
+
+                    // Translate Cause Code to Strings if they are Enums
+                    // "BOOTING" comes as string from grpc-js if enum is resolved?
+                    // If proto loader options enums=String, it should be a string.
+
+                    logSystemEvent('HISTORY_ALARM', `Interruzione passata: ${cause} (${durationSec}s)`, {
+                        cause: cause,
+                        duration_s: durationSec,
+                        timestamp: unixTimeMs
+                    });
+                    newCount++;
+                }
+            }
+            if (newCount > 0) {
+                console.log(`Synced ${newCount} historical outages.`);
+            }
+        }
+    } catch (e) {
+        console.warn("Outage Sync Failed:", e.message);
+    }
+}
+
 function createWindow() {
     const mainWindow = new BrowserWindow({
         width: 1280,
@@ -95,13 +163,50 @@ function createWindow() {
         try {
             const data = await starlinkService.getStatus();
 
-            // Save to DB if valid data
+            // --- Event Logic ---
+            if (!lastConnected) {
+                lastConnected = true;
+                logSystemEvent('INFO', 'Connessione stabilita con Starlink', { hardware_version: data?.dish_get_status?.device_info?.hardware_version });
+                // Prune duplicates immediately to ensure only THIS one remains visible
+                db.pruneRedundantEvents('INFO', 'Connessione stabilita con Starlink%');
+            }
+
             if (data && data.dish_get_status) {
+                // Save stats
                 db.insertStats(data.dish_get_status);
+
+                // Check Alerts
+                const currentAlerts = data.dish_get_status.alerts || {};
+
+                // key-value pairs where value is boolean true/false
+                for (const [key, value] of Object.entries(currentAlerts)) {
+                    const wasActive = lastAlerts[key] === true;
+                    const isActive = value === true;
+
+                    if (isActive && !wasActive) {
+                        // Alert Raised
+                        logSystemEvent('WARNING', `Allerta attivata: ${key}`, { alert: key });
+                    } else if (!isActive && wasActive) {
+                        // Alert Cleared
+                        logSystemEvent('INFO', `Allerta risolta: ${key}`, { alert: key });
+                    }
+                }
+                lastAlerts = { ...currentAlerts };
+
+                // Trigger Background Sync occasionally (e.g. random chance or timer)
+                // For now, call it if we have valid data, but throttle via logic globally if needed.
+                // Or just call it every time status updates (1s) is too much?
+                // Let's just call it every 1 minute using a simple timer outside or...
+                // Actually, let's just call it here with a throttle check.
             }
 
             return { success: true, data };
         } catch (error) {
+            // Track Disconnection
+            if (lastConnected) {
+                lastConnected = false;
+                logSystemEvent('ERROR', 'Connessione persa con Starlink', { error: error.message });
+            }
             console.error("Starlink API Error:", error);
             return { success: false, error: error.message };
         }
@@ -109,6 +214,10 @@ function createWindow() {
 
     ipcMain.handle('starlink:history', async () => {
         return db.getHistory(60); // Get last 60 seconds by default
+    });
+
+    ipcMain.handle('events:get', async (_, limit) => {
+        return db.getEvents(limit || 50);
     });
 
 
@@ -134,22 +243,23 @@ function createWindow() {
         }
     });
 
+    // Get App Version
+    ipcMain.handle('app:version', () => {
+        return { success: true, version: app.getVersion() };
+    });
+
     // Handle Speedtest
     ipcMain.handle('speedtest:run', async (event) => {
         try {
             const result = await speedtestService.run((progress) => {
                 // Send progress to renderer
                 // progress: { type: 'download'|'upload', speed: number }
-                // Convert bytes/sec to Mbps if needed, but service does it? 
-                // Service assumes speed passed is bytes/sec for download event from library?
-                // Let's check service logic: speed * 8. So it's bits/sec.
-                // We want Mbps for UI.
-                const mbps = progress.speed / 1000000;
+                // Service passes Mbps directly from LibreSpeedClient.
 
                 // Find sending window (event.sender is WebContents)
                 event.sender.send('speedtest:update', {
                     type: progress.type,
-                    speed: mbps
+                    speed: progress.speed
                 });
             });
             return { success: true, data: result };
@@ -177,7 +287,8 @@ function createWindow() {
     });
 
     ipcMain.handle('router:status', async () => {
-        return routerService.getWifiStatus();
+        // return routerService.getWifiStatus();
+        return { success: false, error: "Not Implemented" };
     });
 
     ipcMain.handle('starlink:unstow', async () => {
@@ -203,6 +314,10 @@ app.whenReady().then(async () => {
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
+
+    // Start periodical sync
+    syncOutageHistory(); // Run immediately
+    setInterval(syncOutageHistory, 60000); // Check every minute
 });
 
 app.on('window-all-closed', () => {

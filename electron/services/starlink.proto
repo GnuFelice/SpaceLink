@@ -8,14 +8,17 @@ service Device {
 
 message Request {
     oneof request {
-        GetStatusRequest get_status = 1004;
-        GetHistoryRequest get_history = 1006;
+        GetNextIdRequest get_next_id = 1006;
+        GetHistoryRequest get_history = 1007; // 1006 is GetNextId
         RebootRequest reboot = 1001;
+        GetStatusRequest get_status = 1004;
         DishStowRequest dish_stow = 2002;
         GetLocationRequest get_location = 1017;
         WifiGetStatusRequest wifi_get_status = 3005;
     }
 }
+
+message GetNextIdRequest {}
 
 message Response {
     oneof response {
@@ -75,6 +78,21 @@ message DishGetStatusResponse {
     float snr = 1011;
     float pop_ping_latency_ms = 1012;
     DishObstructionStats obstruction_stats = 1006;
+    AlignmentStats alignment_stats = 1013; // Gen 3 Alignment Data
+    // bytes alignment_stats_raw = 1013; 
+    
+    // Probing for missing data
+    // bytes probe_1010 = 1010;
+    // bytes probe_1014 = 1014;
+    // bytes probe_1015 = 1015;
+    // bytes probe_1016 = 1016;
+}
+
+message AlignmentStats {
+    float boresight_azimuth_deg = 1;
+    float boresight_elevation_deg = 2;
+    float desired_boresight_azimuth_deg = 3;
+    float desired_boresight_elevation_deg = 4;
 }
 
 message DishObstructionStats {
@@ -89,6 +107,30 @@ message DishGetHistoryResponse {
     repeated float downlink_throughput_bps = 1002;
     repeated float uplink_throughput_bps = 1003;
     repeated float power_in = 1004;
+    repeated DishOutage outages = 1009; // Outage History
+}
+
+message DishOutage {
+    enum Cause {
+        UNKNOWN = 0;
+        BOOTING = 1;
+        STOWED = 2;
+        THERMAL_SHUTDOWN = 3;
+        NO_SCHEDULE = 4;
+        NO_SATS = 5;
+        OBSTRUCTED = 6;
+        NO_DOWNLINK = 7;
+        NO_PINGS = 8;
+        ACTUATOR_ACTIVITY = 9;
+        CABLE_TEST = 10;
+        SLEEPING = 11;
+        MOVING_WHILE_NOT_ALLOWED = 12;
+    }
+    
+    Cause cause = 1;
+    int64 start_timestamp_ns = 2;
+    uint64 duration_ns = 3;
+    bool did_switch = 4;
 }
 
 message DeviceInfo {
@@ -109,4 +151,7 @@ message DishAlerts {
     bool unexpected_location = 4;
     bool mast_not_near_vertical = 5;
     bool slow_ethernet_speeds = 6;
+    bool roaming = 7;
+    bool install_pending = 8;
+    bool is_heating = 9;
 }

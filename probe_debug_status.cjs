@@ -35,10 +35,25 @@ async function runProbe() {
             console.log("Response Received:");
             console.log(JSON.stringify(response, null, 2));
 
-            if (!response.dish_get_status) {
-                console.error("CRITICAL: dish_get_status is MISSING in response!");
+            if (response.dish_get_status) {
+                const status = response.dish_get_status;
+                console.log("Dish Status Keys:", Object.keys(status));
+                // Check flattened floats
+                console.log("1014:", status.val_1014);
+                console.log("1015:", status.val_1015);
+                console.log("1016:", status.val_1016);
+                console.log("1017:", status.val_1017);
+                console.log("1018:", status.val_1018);
+
+                if (status.alignment_stats) console.log("FOUND 1013 (Msg):", JSON.stringify(status.alignment_stats));
+
+                console.log("RAW 1013:", status.alignment_stats_raw ? status.alignment_stats_raw.toString('hex') : "NULL");
+                console.log("RAW 1010:", status.probe_1010 ? status.probe_1010.toString('hex') : "NULL");
+                console.log("RAW 1014:", status.probe_1014 ? status.probe_1014.toString('hex') : "NULL");
+                console.log("RAW 1015:", status.probe_1015 ? status.probe_1015.toString('hex') : "NULL");
+                console.log("RAW 1016:", status.probe_1016 ? status.probe_1016.toString('hex') : "NULL");
             } else {
-                console.log("OK: dish_get_status is present.");
+                console.log("No dish_get_status in response");
             }
         }
     });

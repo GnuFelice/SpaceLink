@@ -5,7 +5,9 @@ import SkyMap from './components/SkyMap';
 import SpeedtestWidget from './components/SpeedtestWidget';
 import SettingsModal from './components/SettingsModal';
 import DiagnosticsWidget from './components/DiagnosticsWidget';
+import AlignmentWidget from './components/AlignmentWidget';
 import SplashScreen from './components/SplashScreen';
+import EventLogWidget from './components/EventLogWidget';
 
 function App() {
   const [status, setStatus] = useState(null);
@@ -13,6 +15,21 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [splashFinished, setSplashFinished] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [appVersion, setAppVersion] = useState("v1.0.0"); // Default
+
+  // Initial Data Fetch
+  useEffect(() => {
+    const init = async () => {
+      try {
+        // Get Version
+        const ver = await window.electronAPI.getAppVersion();
+        if (ver.success) setAppVersion(`v${ver.version}`);
+      } catch (e) {
+        console.error("Failed to get version", e);
+      }
+    };
+    init();
+  }, []);
 
   // Status Polling (1s)
   useEffect(() => {
@@ -20,7 +37,8 @@ function App() {
       try {
         const result = await window.electronAPI.getStarlinkStatus();
         if (result.success) {
-          console.log("Starlink Status received:", result.data.dish_get_status); // DEBUG
+          // console.log("Starlink Status received:", result.data.dish_get_status);
+          // console.log("Dish Capabilities:", result.data.dish_get_status.capabilities); // Check this!
           setStatus(result.data.dish_get_status);
         }
       } catch (err) {
@@ -63,6 +81,10 @@ function App() {
 
   const formatSpeed = (bps) => (bps / 1000000).toFixed(1);
 
+  // Capabilities helpers
+  const hasMotors = status?.capabilities?.has_motors !== false; // Default to true if undefined (Gen 2 assumption)
+  const needsAlignment = status?.capabilities?.requires_manual_alignment === true;
+
   if (showSplash) {
     return <SplashScreen onComplete={() => setSplashFinished(true)} />;
   }
@@ -74,7 +96,7 @@ function App() {
         <div className="logo-section" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div className="logo-icon" style={{ fontSize: '1.2rem' }}>🛰️</div>
           <h1 style={{ margin: 0, fontSize: '1.1rem', background: 'linear-gradient(90deg, #fff, #8b9bb4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            SpaceLink <span className="version" style={{ fontSize: '0.7rem', opacity: 0.5 }}>v1.2.0</span>
+            SpaceLink <span className="version" style={{ fontSize: '0.7rem', opacity: 0.5, WebkitTextFillColor: 'initial', color: '#8b9bb4' }}>{appVersion}</span>
           </h1>
         </div>
 
@@ -94,34 +116,40 @@ function App() {
           >
             🔄
           </button>
-          <button
-            onClick={async () => {
-              if (confirm('Riporre (Stow) il dish?')) {
-                setLoading(true);
-                await window.electronAPI.stow();
-                setLoading(false);
-              }
-            }}
-            className="btn-icon"
-            title="Stow (Riponi)"
-            style={{ background: 'transparent', border: '1px solid rgba(255, 183, 0, 0.5)', color: '#ffb700', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer' }}
-          >
-            ⬇️
-          </button>
-          <button
-            onClick={async () => {
-              if (confirm('Aprire (Unstow) il dish?')) {
-                setLoading(true);
-                await window.electronAPI.unstow();
-                setLoading(false);
-              }
-            }}
-            className="btn-icon"
-            title="Unstow (Apri)"
-            style={{ background: 'transparent', border: '1px solid rgba(0, 243, 255, 0.5)', color: '#00f3ff', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer' }}
-          >
-            ⬆️
-          </button>
+
+          {hasMotors && (
+            <>
+              <button
+                onClick={async () => {
+                  if (confirm('Riporre (Stow) il dish?')) {
+                    setLoading(true);
+                    await window.electronAPI.stow();
+                    setLoading(false);
+                  }
+                }}
+                className="btn-icon"
+                title="Stow (Riponi)"
+                style={{ background: 'transparent', border: '1px solid rgba(255, 183, 0, 0.5)', color: '#ffb700', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer' }}
+              >
+                ⬇️
+              </button>
+              <button
+                onClick={async () => {
+                  if (confirm('Aprire (Unstow) il dish?')) {
+                    setLoading(true);
+                    await window.electronAPI.unstow();
+                    setLoading(false);
+                  }
+                }}
+                className="btn-icon"
+                title="Unstow (Apri)"
+                style={{ background: 'transparent', border: '1px solid rgba(0, 243, 255, 0.5)', color: '#00f3ff', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer' }}
+              >
+                ⬆️
+              </button>
+            </>
+          )}
+
           <button
             onClick={() => setShowSettings(true)}
             className="btn-icon"
@@ -151,7 +179,11 @@ function App() {
                 status={status ? 'good' : 'error'}
               />
 
-              {/* Diagnostics Widget */}
+              {(needsAlignment || status?.alignment_stats) && (
+                <AlignmentWidget alignmentStats={status?.alignment_stats} />
+              )}
+
+              {/* Diagnostics Widget - Pass capabilities for sensor filtering */}
               <DiagnosticsWidget status={status} />
 
               {/* Metrics Stack */}
@@ -196,9 +228,14 @@ function App() {
                 />
               </div>
 
-              {/* Speedtest Widget (Top Right) */}
-              <div style={{ width: '100%', height: '100%', minHeight: '0', gridColumn: '2 / 3' }}>
-                <SpeedtestWidget />
+              {/* Speedtest Widget & Event Log (Right Column) */}
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px', gridColumn: '2 / 3', height: '100%', minHeight: '0' }}>
+                <div style={{ flex: '0 0 auto' }}>
+                  <SpeedtestWidget />
+                </div>
+                <div style={{ flex: '1 1 auto', minHeight: '0' }}>
+                  <EventLogWidget />
+                </div>
               </div>
 
               {/* History Charts (Bottom Row) */}

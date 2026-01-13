@@ -10,6 +10,7 @@ const DiagnosticsWidget = ({ status }) => {
     };
 
     const health = getHealthStatus();
+    const hasMotors = status?.capabilities?.has_motors !== false; // Default true
 
     // Map health to colors/icons
     const styles = {
@@ -68,47 +69,49 @@ const DiagnosticsWidget = ({ status }) => {
             {/* Full Sensor List with Traffic Lights */}
             <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {[
-                    { key: 'motors_stuck', label: 'Motori' },
+                    { key: 'motors_stuck', label: 'Motori', requiresMotors: true },
                     { key: 'thermal_throttle', label: 'Temperatura' },
                     { key: 'thermal_shutdown', label: 'Protezione Termica' },
                     { key: 'mast_not_near_vertical', label: 'Verticalità Palo' },
                     { key: 'unexpected_location', label: 'Posizione GPS' },
                     { key: 'slow_ethernet_speeds', label: 'Cavo Ethernet' }
-                ].map(sensor => {
-                    const isAlert = status?.alerts?.[sensor.key];
-                    // Traffic light logic: Green if OK (false/undefined), Red if Alert (true)
-                    const color = isAlert ? '#ff4d4d' : '#50ff80';
+                ]
+                    .filter(sensor => !sensor.requiresMotors || hasMotors)
+                    .map(sensor => {
+                        const isAlert = status?.alerts?.[sensor.key];
+                        // Traffic light logic: Green if OK (false/undefined), Red if Alert (true)
+                        const color = isAlert ? '#ff4d4d' : '#50ff80';
 
-                    return (
-                        <div key={sensor.key} style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            fontSize: '0.75rem',
-                            padding: '4px 0',
-                            borderBottom: '1px solid rgba(255,255,255,0.03)'
-                        }}>
-                            <span style={{ color: 'var(--text-secondary)' }}>{sensor.label}</span>
+                        return (
+                            <div key={sensor.key} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                fontSize: '0.75rem',
+                                padding: '4px 0',
+                                borderBottom: '1px solid rgba(255,255,255,0.03)'
+                            }}>
+                                <span style={{ color: 'var(--text-secondary)' }}>{sensor.label}</span>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span style={{
-                                    color: color,
-                                    fontWeight: 'bold',
-                                    opacity: 0.9
-                                }}>
-                                    {isAlert ? 'ERRORE' : 'OK'}
-                                </span>
-                                <div style={{
-                                    width: '8px',
-                                    height: '8px',
-                                    borderRadius: '50%',
-                                    background: color,
-                                    boxShadow: `0 0 8px ${color}`
-                                }}></div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{
+                                        color: color,
+                                        fontWeight: 'bold',
+                                        opacity: 0.9
+                                    }}>
+                                        {isAlert ? 'ERRORE' : 'OK'}
+                                    </span>
+                                    <div style={{
+                                        width: '8px',
+                                        height: '8px',
+                                        borderRadius: '50%',
+                                        background: color,
+                                        boxShadow: `0 0 8px ${color}`
+                                    }}></div>
+                                </div>
                             </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
             </div>
         </div>
     );

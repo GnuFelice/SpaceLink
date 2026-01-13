@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getRouterStatus: () => ipcRenderer.invoke('router:status'),
     getSettings: () => ipcRenderer.invoke('settings:get'),
     saveSettings: (settings) => ipcRenderer.invoke('settings:set', settings),
+    getAppVersion: () => ipcRenderer.invoke('app:version'),
+    getEvents: (limit) => ipcRenderer.invoke('events:get', limit),
 
     // Speedtest
     runSpeedtest: () => ipcRenderer.invoke('speedtest:run'),

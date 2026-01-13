@@ -127,6 +127,37 @@ body {
   border-radius: 3px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 243, 255, 0.4);
+
+/* Marquee Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  /* Mask to fade edges */
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+
+.marquee-text {
+  display: inline-block;
+  padding-left: 100%;
+  /* Start completely off-screen right */
+  animation: marquee 15s linear infinite;
+  /* Ensure text doesn't wrap */
+  white-space: nowrap;
+}
+
+/* Hover to pause */
+.marquee-container:hover .marquee-text {
+  animation-play-state: paused;
 }
