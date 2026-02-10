@@ -7,7 +7,7 @@ import DiagnosticsWidget from './DiagnosticsWidget';
 import AlignmentWidget from './AlignmentWidget';
 import EventLogWidget from './EventLogWidget';
 
-function DashboardView({ status, history, formatSpeed, needsAlignment }) {
+function DashboardView({ status, history, formatSpeed, needsAlignment, hasMotors }) {
     return (
         <div className="dashboard-compact">
             {/* LEFT COLUMN: Sidebar (Metrics) */}
@@ -24,7 +24,7 @@ function DashboardView({ status, history, formatSpeed, needsAlignment }) {
                 />
 
                 {(needsAlignment || status?.alignment_stats) && (
-                    <AlignmentWidget alignmentStats={status?.alignment_stats} />
+                    <AlignmentWidget alignmentStats={status?.alignment_stats} hasMotors={hasMotors} />
                 )}
 
                 {/* Diagnostics Widget - Pass capabilities for sensor filtering */}

@@ -286,6 +286,52 @@ function SettingsModal({ onClose }) {
                                             )}
                                         </div>
                                     </div>
+
+                                    {/* GPS & ALIGNMENT */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '8px' }}>
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>GPS</div>
+                                            <div style={{ fontSize: '0.9rem', marginBottom: '5px' }}>
+                                                <span style={{ color: 'var(--text-secondary)' }}>Valid: </span>
+                                                <span style={{ color: antennaData.gps_stats?.gps_valid ? '#50ff80' : '#ff5050' }}>
+                                                    {antennaData.gps_stats?.gps_valid ? 'SÌ' : 'NO'}
+                                                </span>
+                                            </div>
+                                            <div style={{ fontSize: '0.9rem' }}>
+                                                <span style={{ color: 'var(--text-secondary)' }}>Sats: </span>
+                                                {antennaData.gps_stats?.gps_sats ?? '--'}
+                                            </div>
+                                        </div>
+
+                                        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '8px' }}>
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>Allineamento</div>
+                                            <div style={{ fontSize: '0.9rem', marginBottom: '5px' }}>
+                                                <span style={{ color: 'var(--text-secondary)' }}>Azimuth: </span>
+                                                {antennaData.alignment_stats?.boresight_azimuth_deg?.toFixed(1) ?? '--'}°
+                                            </div>
+                                            <div style={{ fontSize: '0.9rem' }}>
+                                                <span style={{ color: 'var(--text-secondary)' }}>Elevation: </span>
+                                                {antennaData.alignment_stats?.boresight_elevation_deg?.toFixed(1) ?? '--'}°
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* OBSTRUCTION */}
+                                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '8px' }}>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>Ostruzioni</div>
+                                        <div style={{ fontSize: '0.9rem', marginBottom: '5px' }}>
+                                            <span style={{ color: 'var(--text-secondary)' }}>Stato: </span>
+                                            <span style={{ color: (antennaData.obstruction_stats?.fraction_obstructed > 0) ? '#ff5050' : '#50ff80' }}>
+                                                {(antennaData.obstruction_stats?.fraction_obstructed > 0)
+                                                    ? `OSTRUITO (${(antennaData.obstruction_stats.fraction_obstructed * 100).toFixed(1)}%)`
+                                                    : 'LIBERO'}
+                                            </span>
+                                        </div>
+                                        <div style={{ fontSize: '0.9rem' }}>
+                                            <span style={{ color: 'var(--text-secondary)' }}>Validità: </span>
+                                            {(antennaData.obstruction_stats?.valid_s / 3600).toFixed(1)} ore
+                                        </div>
+                                    </div>
                                 </>
                             )}
                         </div>

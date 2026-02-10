@@ -58,8 +58,8 @@ const HistoryChart = ({ data, title, dataKey, color, unit, domain, height = 200 
                 letterSpacing: '1px'
             }}>{title}</h3>
 
-            <div style={{ width: '100%', flex: 1, minHeight: 0 }}>
-                <ResponsiveContainer>
+            <div style={{ width: '100%', flex: 1, minHeight: 0, position: 'relative' }}>
+                <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={data}>
                         <defs>
                             <linearGradient id={`gradient_${dataKey}`} x1="0" y1="0" x2="0" y2="1">

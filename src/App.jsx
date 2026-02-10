@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import StatusCard from './components/StatusCard'; // Still needed for splash/loading logic if reused, or remove if logic moved
+import StatusCard from './components/StatusCard';
 import SplashScreen from './components/SplashScreen';
 import SettingsModal from './components/SettingsModal';
 import DashboardView from './components/DashboardView';
 import EventRegistryView from './components/EventRegistryView';
 
 function App() {
-  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard' | 'registry'
+  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard' | 'registry' | 'network'
   const [status, setStatus] = useState(null);
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -87,7 +87,7 @@ function App() {
   return (
     <div className="app-container" style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Compact Header with Controls and Navigation */}
-      <header className="app-header" style={{ padding: '0 20px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--md-outline)', background: 'var(--md-surface-variant)', boxShadow: 'var(--md-elevation-2)' }}>
+      <header className="app-header" style={{ padding: '0 150px 0 20px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--md-outline)', background: 'var(--md-surface-variant)', boxShadow: 'var(--md-elevation-2)', WebkitAppRegion: 'drag' }}>
         <div className="logo-section" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div className="logo-icon" style={{ fontSize: '1.4rem' }}>🛰️</div>
@@ -97,138 +97,117 @@ function App() {
           </div>
 
           {/* Navigation Tabs */}
-          <div style={{ display: 'flex', gap: '10px', marginLeft: '30px', background: 'rgba(0,0,0,0.2)', padding: '5px', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginLeft: '30px', background: 'rgba(0,0,0,0.2)', padding: '5px', borderRadius: '8px', WebkitAppRegion: 'no-drag' }}>
             <button
               onClick={() => setActiveView('dashboard')}
               style={{
-                background: activeView === 'dashboard' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                background: activeView === 'dashboard' ? 'var(--md-primary)' : 'transparent',
+                color: activeView === 'dashboard' ? 'var(--md-on-primary)' : 'var(--md-on-surface-variant)',
                 border: 'none',
-                color: activeView === 'dashboard' ? '#fff' : 'var(--text-secondary)',
-                padding: '8px 16px',
+                padding: '5px 15px',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                fontWeight: activeView === 'dashboard' ? 'bold' : 'normal',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
+                fontSize: '0.9rem',
+                fontWeight: 500,
+                transition: 'all 0.2s'
               }}
             >
-              📊 Dashboard
+              Dashboard
             </button>
+
             <button
               onClick={() => setActiveView('registry')}
               style={{
-                background: activeView === 'registry' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                background: activeView === 'registry' ? 'var(--md-primary)' : 'transparent',
+                color: activeView === 'registry' ? 'var(--md-on-primary)' : 'var(--md-on-surface-variant)',
                 border: 'none',
-                color: activeView === 'registry' ? '#fff' : 'var(--text-secondary)',
-                padding: '8px 16px',
+                padding: '5px 15px',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                fontWeight: activeView === 'registry' ? 'bold' : 'normal',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
+                fontSize: '0.9rem',
+                fontWeight: 500,
+                transition: 'all 0.2s'
               }}
             >
-              📜 Registro Eventi
+              Registro Eventi
             </button>
           </div>
         </div>
 
-        {/* Header Controls */}
-        <div style={{ display: 'flex', gap: '10px', marginRight: '140px', WebkitAppRegion: 'no-drag' }}>
+        {/* Right Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', WebkitAppRegion: 'no-drag' }}>
           <button
+            className="control-btn"
+            title="Stow (Riponi)"
             onClick={async () => {
-              if (confirm('Riavviare Starlink?')) {
-                setLoading(true);
-                await window.electronAPI.reboot();
-                setLoading(false);
+              if (confirm("Attenzione: Il piatto Starlink verrà riposto. Continuare?")) {
+                await window.electronAPI.stow();
+                alert("Comando Stow inviato.");
               }
             }}
-            className="btn-icon"
+            disabled={!hasMotors || status?.state === 'STOWED'}
+            style={{ opacity: !hasMotors || status?.state === 'STOWED' ? 0.5 : 1, cursor: 'pointer', background: 'none', border: 'none', fontSize: '1.2rem' }}
+          >
+            🛑
+          </button>
+
+          <button
+            className="control-btn"
+            title="Unstow (Attiva)"
+            onClick={async () => {
+              await window.electronAPI.unstow();
+              alert("Comando Unstow inviato.");
+            }}
+            disabled={!hasMotors || status?.state !== 'STOWED'}
+            style={{ opacity: !hasMotors || status?.state !== 'STOWED' ? 0.5 : 1, cursor: 'pointer', background: 'none', border: 'none', fontSize: '1.2rem', display: status?.state === 'STOWED' ? 'block' : 'none' }}
+          >
+            🚀
+          </button>
+
+          <button
+            className="control-btn"
             title="Riavvia"
-            style={{ background: 'transparent', border: '1px solid rgba(255, 51, 102, 0.5)', color: '#ff3366', borderRadius: '4px', padding: '6px 10px', cursor: 'pointer', fontSize: '1.2rem' }}
+            onClick={async () => {
+              if (confirm("Sei sicuro di voler riavviare Starlink?")) {
+                await window.electronAPI.reboot();
+                alert("Riavvio in corso...");
+              }
+            }}
+            style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}
           >
             🔄
           </button>
-
-          {hasMotors && (
-            <>
-              <button
-                onClick={async () => {
-                  if (confirm('Riporre (Stow) il dish?')) {
-                    setLoading(true);
-                    await window.electronAPI.stow();
-                    setLoading(false);
-                  }
-                }}
-                className="btn-icon"
-                title="Stow (Riponi)"
-                style={{ background: 'transparent', border: '1px solid rgba(255, 183, 0, 0.5)', color: '#ffb700', borderRadius: '4px', padding: '6px 10px', cursor: 'pointer', fontSize: '1.2rem' }}
-              >
-                ⬇️
-              </button>
-              <button
-                onClick={async () => {
-                  if (confirm('Aprire (Unstow) il dish?')) {
-                    setLoading(true);
-                    await window.electronAPI.unstow();
-                    setLoading(false);
-                  }
-                }}
-                className="btn-icon"
-                title="Unstow (Apri)"
-                style={{ background: 'transparent', border: '1px solid rgba(0, 243, 255, 0.5)', color: '#00f3ff', borderRadius: '4px', padding: '6px 10px', cursor: 'pointer', fontSize: '1.2rem' }}
-              >
-                ⬆️
-              </button>
-            </>
-          )}
-
           <button
-            onClick={() => setShowSettings(true)}
-            className="btn-icon"
+            className="control-btn"
             title="Impostazioni"
-            style={{ background: 'transparent', border: '1px solid rgba(255, 255, 255, 0.3)', color: '#fff', borderRadius: '4px', padding: '6px 10px', cursor: 'pointer', fontSize: '1.2rem' }}
+            onClick={() => setShowSettings(true)}
+            style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: 'var(--md-primary)' }}
           >
             ⚙️
           </button>
-          <div className="window-controls"></div>
         </div>
       </header>
 
-      <main style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        {loading && !status && !splashFinished ? (
-          // This state is visually covered by SplashScreen, effectively.
-          // Leaving minimal placeholder just in case splash finishes before data.
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--accent-cyan)' }}>
-            Connessione al Dish in corso...
-          </div>
-        ) : (
-          <>
-            {activeView === 'dashboard' && (
-              <div className="dashboard-content" style={{ height: '100%', padding: '20px', boxSizing: 'border-box' }}>
-                <DashboardView
-                  status={status}
-                  history={history}
-                  formatSpeed={formatSpeed}
-                  needsAlignment={needsAlignment}
-                />
-              </div>
-            )}
-            {activeView === 'registry' && (
-              <EventRegistryView />
-            )}
-          </>
+      {/* Main Content Area */}
+      <div className="main-content" style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {activeView === 'dashboard' && (
+          <DashboardView
+            status={status}
+            history={history}
+            hasMotors={hasMotors}
+            needsAlignment={needsAlignment}
+            formatSpeed={formatSpeed}
+          />
         )}
-      </main>
 
-      {/* Settings Modal */}
-      {showSettings && (
-        <SettingsModal onClose={() => setShowSettings(false)} />
-      )}
+        {activeView === 'registry' && (
+          <EventRegistryView limit={100} />
+        )}
+
+        {showSettings && (
+          <SettingsModal onClose={() => setShowSettings(false)} />
+        )}
+      </div>
     </div>
   );
 }

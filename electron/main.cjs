@@ -14,8 +14,8 @@ const db = new TelemetryDB();
 db.pruneRedundantEvents('INFO', 'Connessione stabilita con Starlink%');
 
 // Initialize Services
-// Use Mock if not on Starlink network (controlled by ENV or default)
-const starlinkService = new StarlinkService(false);
+// Initialize Services - Direct gRPC connection to antenna
+const starlinkService = new StarlinkService();
 const speedtestService = new SpeedtestService();
 
 // --- Settings Persistence ---
@@ -288,10 +288,7 @@ function createWindow() {
         }
     });
 
-    ipcMain.handle('router:status', async () => {
-        // return routerService.getWifiStatus();
-        return { success: false, error: "Not Implemented" };
-    });
+
 
     ipcMain.handle('starlink:unstow', async () => {
         try {

@@ -4,12 +4,13 @@ package SpaceX.API.Device;
 
 service Device {
     rpc Handle (Request) returns (Response);
+    rpc Stream (stream Request) returns (stream Response);
 }
 
 message Request {
     oneof request {
         GetNextIdRequest get_next_id = 1006;
-        GetHistoryRequest get_history = 1007; // 1006 is GetNextId
+        GetHistoryRequest get_history = 1007;
         RebootRequest reboot = 1001;
         GetStatusRequest get_status = 1004;
         DishStowRequest dish_stow = 2002;
@@ -31,100 +32,47 @@ message Response {
     }
 }
 
-message WifiGetStatusRequest {}
-
-message WifiGetStatusResponse {
-    DeviceInfo device_info = 1;
-    DeviceState device_state = 2;
-    WifiConfig config = 2000;
-}
-
-message WifiConfig {
-    string country_code = 1;
-    string network_name = 3;
-    string network_password = 4;
-}
-
-message GetStatusRequest {}
-message GetHistoryRequest {}
-message RebootRequest {}
-message DishStowRequest {
-    bool unstow = 1;
-}
-message GetLocationRequest {}
-
-message GetLocationResponse {
-    LLAPosition lla = 1;
-}
-
-message LLAPosition {
-    double lat = 1;
-    double lon = 2;
-    double alt = 3;
-}
-
-message RebootResponse {}
-message DishStowResponse {}
-
 message DishGetStatusResponse {
     DeviceInfo device_info = 1;
-    DeviceState device_state = 2; // Fixed field 2
-    DishAlerts alerts = 105;
-    // float snr = 106;
-    
+    DeviceState device_state = 2;
+
+    // Verified Top-Level Fields
+    float seconds_to_first_nonempty_slot = 1002;
+    float pop_ping_drop_rate = 1003;
+    DishObstructionStats obstruction_stats = 1004;
+    DishAlerts alerts = 1005;
     float downlink_throughput_bps = 1007;
     float uplink_throughput_bps = 1008;
     float power_in = 1009;
+    bool stow_requested = 1010;
     float snr = 1011;
     float pop_ping_latency_ms = 1012;
-    DishObstructionStats obstruction_stats = 1006;
-    AlignmentStats alignment_stats = 1013;
-}
 
-message AlignmentStats {
-    float boresight_azimuth_deg = 1;
-    float boresight_elevation_deg = 2;
-    float desired_boresight_azimuth_deg = 3;
-    float desired_boresight_elevation_deg = 4;
-}
+    // Verified Sub-Messages
+    DishGpsStats gps_stats = 1015;
+    int32 eth_speed_mbps = 1016;
+    int32 mobility_class = 1017;
+    bool is_snr_above_noise_floor = 1018;
+    DishReadyStates ready_states = 1019;
+    int32 class_of_service = 1020;
+    int32 software_update_state = 1021;
+    bool is_snr_persistently_low = 1022;
+    int32 has_actuators = 1023;
+    int32 disablement_code = 1024;
+    bool has_signed_cals = 1025;
 
-message DishObstructionStats {
-    float fraction_obstructed = 1;
-    float valid_s = 4;
-    repeated float wedge_fraction_obstructed = 5;
-}
-
-message DishGetHistoryResponse {
-    uint64 current = 1;
-    repeated float pop_ping_latency_ms = 1001;
-    repeated float downlink_throughput_bps = 1002;
-    repeated float uplink_throughput_bps = 1003;
-    repeated float power_in = 1004;
-    repeated DishOutage outages = 1009; // Outage History
-}
-
-message DishOutage {
-    enum Cause {
-        UNKNOWN = 0;
-        BOOTING = 1;
-        STOWED = 2;
-        THERMAL_SHUTDOWN = 3;
-        NO_SCHEDULE = 4;
-        NO_SATS = 5;
-        OBSTRUCTED = 6;
-        NO_DOWNLINK = 7;
-        NO_PINGS = 8;
-        ACTUATOR_ACTIVITY = 9;
-        CABLE_TEST = 10;
-        SLEEPING = 11;
-        MOVING_WHILE_NOT_ALLOWED = 12;
-    }
+    // Software & Alignment
+    SoftwareUpdateStats software_update_stats = 1026;
+    AlignmentStats alignment_stats = 1027;
+    InitializationDurationSeconds initialization_duration_seconds = 1028;
     
-    Cause cause = 1;
-    int64 start_timestamp_ns = 2;
-    uint64 duration_ns = 3;
-    bool did_switch = 4;
+    // Config - temporarily disabled/byte to avoid crash if complex
+    // bytes config_raw = 2000; 
 }
+
+// ---------------------------------------------------------------------
+// Sub-Messages (Strictly Typed based on Decoder Output)
+// ---------------------------------------------------------------------
 
 message DeviceInfo {
     string id = 1;
@@ -137,6 +85,41 @@ message DeviceState {
     uint64 uptime_s = 1;
 }
 
+message DishObstructionStats {
+    float fraction_obstructed = 1; // 0.0 when clear
+    float valid_s = 4;             // Verified
+    int32 unknown_10 = 10;          // Was 5280, likely not a boolean
+    repeated float wedge_fraction_obstructed = 5; 
+}
+
+message DishGpsStats {
+    bool gps_valid = 1; // Verified Varint
+    int32 gps_sats = 2; // Verified Varint
+}
+
+message DishReadyStates {
+    bool cady = 1;
+    bool scp = 2;
+    bool l1l2 = 3;
+    bool xphy = 4;
+    bool aap = 5;
+    bool rf = 6;
+}
+
+message AlignmentStats {
+    float tilt_angle_deg = 3;                // Verified Float
+    float boresight_azimuth_deg = 4;         // Verified Float
+    float boresight_elevation_deg = 5;       // Verified Float
+    int32 desired_boresight_azimuth_deg = 6; // Verified Varint (Int) ? Wait, "desired" implies angle (float)? 
+                                             // If wire is Varint, it MUST be declared int/bool/enum. 
+                                             // Maybe it's `actuator_state` or `attitude_estimation_state`?
+    float desired_boresight_elevation_deg = 7; // Verified Float
+    float attitude_uncertainty_deg = 8;        // Verified Float
+    float error_deg = 9;                       // Verified Float (Field 9)
+}
+
+// Alerts - we didn't see bytes, so it was empty. 
+// Safe to define standard boolean fields.
 message DishAlerts {
     bool motors_stuck = 1;
     bool thermal_shutdown = 2;
@@ -147,4 +130,64 @@ message DishAlerts {
     bool roaming = 7;
     bool install_pending = 8;
     bool is_heating = 9;
+    bool power_supply_thermal_throttle = 10;
+    bool is_power_save_idle = 11;
+    bool dbf_telem_stale = 12;
+    bool low_motor_current = 13;
+    bool lower_signal_than_predicted = 14;
+    bool obstruction_map_reset = 15;
+    bool dish_water_detected = 16;
+    bool router_water_detected = 17;
+    bool upsu_router_port_slow = 18;
+    bool no_ethernet_link = 19;
 }
+
+message SoftwareUpdateStats {
+    int32 software_update_state = 1;
+    float software_update_progress = 2;
+}
+
+message InitializationDurationSeconds {
+    int32 attitude_initialization = 1;
+    int32 burst_detected = 2;
+    int32 ekf_converged = 3;
+    int32 first_cplane = 4;
+    int32 first_pop_ping = 5;
+    int32 gps_valid = 6;
+    int32 initial_network_entry = 7;
+    int32 network_schedule = 8;
+    int32 rf_ready = 9;
+    int32 stable_connection = 10;
+}
+
+// ---------------------------------------------------------------------
+// Other Messages
+// ---------------------------------------------------------------------
+
+message DishOutage {
+    int32 cause = 1;
+    int64 start_timestamp_ns = 2;
+    uint64 duration_ns = 3;
+    bool did_switch = 4;
+}
+
+message DishGetHistoryResponse {
+    uint64 current = 1;
+    repeated float pop_ping_latency_ms = 1001;
+    repeated float downlink_throughput_bps = 1002;
+    repeated float uplink_throughput_bps = 1003;
+    repeated float power_in = 1004;
+    repeated DishOutage outages = 1009;
+}
+
+message GetStatusRequest {}
+message GetHistoryRequest {}
+message RebootRequest {}
+message DishStowRequest { bool unstow = 1; }
+message GetLocationRequest {}
+message RebootResponse {}
+message DishStowResponse {}
+message GetLocationResponse { LLAPosition lla = 1; }
+message LLAPosition { double lat = 1; double lon = 2; double alt = 3; }
+message WifiGetStatusRequest {}
+message WifiGetStatusResponse {}

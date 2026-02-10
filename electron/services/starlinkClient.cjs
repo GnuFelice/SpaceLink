@@ -6,98 +6,9 @@ const util = require('util');
 const PROTO_PATH = path.join(__dirname, 'starlink.proto');
 const DISH_ADDR = '192.168.100.1:9200';
 
-// Mock data generator for development without a dish
-class MockStarlinkClient {
-    constructor() {
-        console.log('Using Mock Starlink Client');
-    }
-
-    getStatus(cb) {
-        // Simulate network delay
-        setTimeout(() => {
-            cb(null, {
-                dish_get_status: {
-                    device_info: {
-                        id: 'MOCK-GEN3-001',
-                        hardware_version: 'rev4_prod', // Gen 3 Standard
-                        software_version: '2026.01.0.mr1234',
-                        country_code: 'IT'
-                    },
-                    device_state: { uptime_s: process.uptime() },
-                    snr: 9,
-                    downlink_throughput_bps: Math.random() * 350 * 1000000, // Gen 3 is faster
-                    uplink_throughput_bps: Math.random() * 40 * 1000000,
-                    pop_ping_latency_ms: 20 + Math.random() * 15,
-                    obstruction_stats: {
-                        fraction_obstructed: 0.15, // 15% obstructed
-                        valid_s: 3600,
-                        wedge_fraction_obstructed: Array.from({ length: 12 }, (_, i) =>
-                            (i < 3 || i > 9) ? Math.random() * 0.8 : 0 // North/NorthEast obstructed
-                        )
-                    },
-                    // Gen 3 Alignment Data (Mocked as slightly misaligned)
-                    alignment_stats: {
-                        boresight_azimuth_deg: 175.5,
-                        boresight_elevation_deg: 65.2,
-                        desired_boresight_azimuth_deg: 180.0, // South (Northern Hemisphere)
-                        desired_boresight_elevation_deg: 70.0
-                    },
-                    alerts: { motors_stuck: false, thermal_throttle: false, roaming: false }
-                }
-            });
-        }, 100);
-    }
-
-    getHistory(cb) {
-        setTimeout(() => {
-            const generateHistory = (min, max) =>
-                Array.from({ length: 120 }, () => min + Math.random() * (max - min));
-
-            cb(null, {
-                dish_get_history: {
-                    current: Date.now(),
-                    pop_ping_latency_ms: generateHistory(15, 40),
-                    downlink_throughput_bps: generateHistory(5000000, 350000000),
-                    uplink_throughput_bps: generateHistory(1000000, 50000000)
-                }
-            });
-        }, 100);
-    }
-
-    reboot(cb) {
-        console.log('MOCK: Rebooting...');
-        setTimeout(() => cb(null, {}), 500);
-    }
-
-    stow(req, cb) {
-        // Gen 3 has no motors, so stow should fail or just log
-        // But the Service layer catches this. If called directly:
-        console.warn('MOCK: Stow called on Gen 3 (Hardware is static). Ignoring.');
-        setTimeout(() => cb(new Error("UNIMPLEMENTED: Dish has no motors")), 500);
-    }
-
-    getLocation(cb) {
-        // Mock Rome, Italy
-        cb(null, {
-            get_location: {
-                lla: {
-                    lat: 41.9028,
-                    lon: 12.4964,
-                    alt: 50.0
-                }
-            }
-        });
-    }
-}
-
 class StarlinkService {
-    constructor(useMock = false) {
+    constructor() {
         this.cachedHardwareVersion = null; // Cache for capabilities
-
-        if (useMock) {
-            this.client = new MockStarlinkClient();
-            return;
-        }
 
         try {
             const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
@@ -109,10 +20,10 @@ class StarlinkService {
             });
             const starlinkProto = grpc.loadPackageDefinition(packageDefinition).SpaceX.API.Device;
             this.client = new starlinkProto.Device(DISH_ADDR, grpc.credentials.createInsecure());
+            console.log('Starlink gRPC client initialized →', DISH_ADDR);
         } catch (e) {
-            console.error('Failed to load proto or connect:', e);
-            console.warn('Falling back to Mock Client due to error');
-            this.client = new MockStarlinkClient();
+            console.error('CRITICAL: Failed to initialize gRPC client:', e);
+            throw new Error('Cannot initialize Starlink gRPC client. Proto file missing or invalid.');
         }
     }
 
