@@ -3,6 +3,7 @@ import StatusCard from './components/StatusCard';
 import SplashScreen from './components/SplashScreen';
 import SettingsModal from './components/SettingsModal';
 import DashboardView from './components/DashboardView';
+import NetworkDiagnosticsView from './components/NetworkDiagnosticsView';
 import EventRegistryView from './components/EventRegistryView';
 
 function App() {
@@ -131,6 +132,23 @@ function App() {
             >
               Registro Eventi
             </button>
+
+            <button
+              onClick={() => setActiveView('network')}
+              style={{
+                background: activeView === 'network' ? 'var(--md-primary)' : 'transparent',
+                color: activeView === 'network' ? 'var(--md-on-primary)' : 'var(--md-on-surface-variant)',
+                border: 'none',
+                padding: '5px 15px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.9rem',
+                fontWeight: 500,
+                transition: 'all 0.2s'
+              }}
+            >
+              Qualità Rete
+            </button>
           </div>
         </div>
 
@@ -202,6 +220,13 @@ function App() {
 
         {activeView === 'registry' && (
           <EventRegistryView limit={100} />
+        )}
+
+        {activeView === 'network' && (
+          <NetworkDiagnosticsView
+            status={status}
+            formatSpeed={formatSpeed}
+          />
         )}
 
         {showSettings && (

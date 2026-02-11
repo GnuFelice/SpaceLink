@@ -125,7 +125,7 @@ function SkyMap({ obstructionData, uptime }) {
             display: 'flex',
             flexDirection: 'column',
             position: 'relative',
-            overflow: 'hidden',
+            overflow: 'visible',
             height: '100%',
             boxSizing: 'border-box'
         }}>
@@ -163,7 +163,7 @@ function SkyMap({ obstructionData, uptime }) {
             </div>
 
             {/* Map Container */}
-            <div style={{ position: 'relative', flex: 1, minHeight: 0, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', flex: 1, minHeight: 0, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'visible' }}>
 
                 {/* CSS Scanner Animation Layer */}
                 <div className="radar-scanner" style={{ opacity: 0.6, zIndex: 10 }}></div>
@@ -174,8 +174,8 @@ function SkyMap({ obstructionData, uptime }) {
                         position: 'absolute',
                         top: `${hoveredSat.pos.y}%`,
                         left: `${hoveredSat.pos.x}%`,
-                        zIndex: 20,
-                        background: 'rgba(10, 14, 23, 0.9)',
+                        zIndex: 9999,
+                        background: 'rgba(10, 14, 23, 0.95)',
                         border: '1px solid var(--accent-cyan)',
                         padding: '8px 12px',
                         borderRadius: '8px',
@@ -196,7 +196,7 @@ function SkyMap({ obstructionData, uptime }) {
                     </div>
                 )}
 
-                <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%', maxHeight: '100%', maxWidth: '100%' }}>
+                <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%', maxHeight: '100%', maxWidth: '100%', overflow: 'visible' }}>
                     <defs>
                         <radialGradient id="clearSkyGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
                             <stop offset="0%" stopColor="#00f3ff" stopOpacity="0.05" />
@@ -266,6 +266,7 @@ function SkyMap({ obstructionData, uptime }) {
                                     opacity={sat.isHighSignal ? 0.9 : 0.6}
                                     style={{ transition: 'all 0.2s ease', cursor: 'pointer' }}
                                     onMouseEnter={() => setHoveredSat({ index: i, data: sat, pos: sat.pos, originalIndex: sat.originalIndex })}
+                                    onClick={() => setHoveredSat({ index: i, data: sat, pos: sat.pos, originalIndex: sat.originalIndex })}
                                     onMouseLeave={() => setHoveredSat(null)}
                                 >
                                     {sat.isHighSignal && !isHovered && (
